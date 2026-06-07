@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Logs
+*.log
+*.err.log
+
+# Local SQLite data
+data/*.db
+data/audio/*
+!data/audio/.gitkeep
+data/transcripts/*
+!data/transcripts/.gitkeep
+
+# Local environment
+.env
+.env.*
+!backend/.env
+
+# Local model files
+models/whisper/*
+!models/whisper/.gitkeep

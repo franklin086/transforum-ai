@@ -31,7 +31,28 @@ def init_db() -> None:
                 audio_duration INTEGER,
                 transcript_file TEXT,
                 transcript_text TEXT,
+                realtime_transcript_text TEXT,
+                english_transcript_text TEXT,
+                minutes_summary TEXT,
+                minutes_key_points TEXT,
+                minutes_action_items TEXT,
+                minutes_next_steps TEXT,
                 transcript_status TEXT NOT NULL DEFAULT 'pending'
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS meeting_archive (
+                meeting_id TEXT PRIMARY KEY,
+                meeting_name TEXT NOT NULL,
+                source_language TEXT NOT NULL,
+                target_language TEXT NOT NULL,
+                created_time TEXT NOT NULL,
+                audio_file TEXT,
+                transcript_text TEXT,
+                english_transcript_text TEXT,
+                realtime_transcript_text TEXT
             )
             """
         )
@@ -47,6 +68,22 @@ def init_db() -> None:
             connection.execute("ALTER TABLE meetings ADD COLUMN transcript_file TEXT")
         if "transcript_text" not in columns:
             connection.execute("ALTER TABLE meetings ADD COLUMN transcript_text TEXT")
+        if "realtime_transcript_text" not in columns:
+            connection.execute(
+                "ALTER TABLE meetings ADD COLUMN realtime_transcript_text TEXT"
+            )
+        if "english_transcript_text" not in columns:
+            connection.execute(
+                "ALTER TABLE meetings ADD COLUMN english_transcript_text TEXT"
+            )
+        if "minutes_summary" not in columns:
+            connection.execute("ALTER TABLE meetings ADD COLUMN minutes_summary TEXT")
+        if "minutes_key_points" not in columns:
+            connection.execute("ALTER TABLE meetings ADD COLUMN minutes_key_points TEXT")
+        if "minutes_action_items" not in columns:
+            connection.execute("ALTER TABLE meetings ADD COLUMN minutes_action_items TEXT")
+        if "minutes_next_steps" not in columns:
+            connection.execute("ALTER TABLE meetings ADD COLUMN minutes_next_steps TEXT")
         if "transcript_status" not in columns:
             connection.execute(
                 "ALTER TABLE meetings ADD COLUMN transcript_status TEXT NOT NULL DEFAULT 'pending'"

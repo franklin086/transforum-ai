@@ -1,14 +1,20 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from models.meeting import MeetingCreateRequest
 from services.export_service import create_docx_export_placeholder
 from services.meeting_repository import (
     create_meeting as create_meeting_record,
+    end_meeting as end_meeting_record,
     get_meeting as get_meeting_record,
     list_recent_meetings,
 )
 
 router = APIRouter()
+
+
+class MeetingEndRequest(BaseModel):
+    meeting_id: str
 
 
 @router.post("/create")
@@ -37,10 +43,15 @@ def start_meeting():
 
 
 @router.post("/end")
-def end_meeting():
+def end_meeting(request: MeetingEndRequest):
+    meeting = end_meeting_record(request.meeting_id)
+    if meeting is None:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
     return {
         "success": True,
         "status": "ended",
+        "meeting": meeting.model_dump(),
     }
 
 

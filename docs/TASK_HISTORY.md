@@ -537,6 +537,259 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - 2026-06-08-TASK-006：TransForum AI Alpha 0.6，中英翻译基础能力。
 
+## 2026-06-08-TASK-005C
+
+任务编号：TASK 005C
+
+时间标签：2026-06-08-TASK-005C
+
+开发版本：TransForum AI Alpha 0.6
+
+任务名称：实时中文字幕基础能力
+
+修改文件：
+
+- README.md
+- backend/main.py
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+
+完成内容：
+
+- 前端会议控制台新增 Real-time Chinese Subtitles 区域。
+- 新增 Start Realtime Caption 和 Stop Realtime Caption。
+- 前端使用 MediaRecorder 每 3 秒生成 `audio/webm` 分片。
+- 新增 `transcribeRealtimeChunk(meetingId, chunkIndex, audioBlob)`。
+- 后端新增 `POST /api/realtime/transcribe-chunk`。
+- 后端保存 chunk 到 `D:\transforum-ai\data\chunks`。
+- 后端使用本地 Whisper tiny 模型识别分片，参数为 `language="zh"`、`task="transcribe"`、`local_files_only=True`。
+- 模型不存在时返回 `MODEL_NOT_FOUND`。
+- 新增 SQLite 字段 `realtime_transcript_text`。
+- 每个识别成功的 chunk 追加保存到 SQLite 和 `data/transcripts/meeting_{meeting_id}_realtime_transcript.txt`。
+- `/api/health` 版本更新为 Alpha 0.6。
+
+完成状态：代码实现完成，真实浏览器麦克风人工验收需用户在本机执行。
+
+验收状态：
+
+- 后端 Python 编译检查通过。
+- 前端 `npm run build` 通过。
+- `/api/health` 返回 `Alpha 0.6`。
+- `/api/realtime/transcribe-chunk` 已完成接口实现。
+- 本次 Codex 环境无法代替用户完成浏览器麦克风授权和人工朗读验收。
+
+下一步任务：
+
+- 2026-06-08-TASK-007：TransForum AI Alpha 0.8，中英双语字幕。
+
+## 2026-06-08-TASK-006
+
+任务编号：TASK 006
+
+时间标签：2026-06-08-TASK-006
+
+开发版本：TransForum AI Alpha 0.7
+
+任务名称：中文字幕投屏模式
+
+修改文件：
+
+- README.md
+- backend/main.py
+- backend/api/realtime.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/meeting/live/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+
+完成内容：
+
+- 新增 `GET /api/realtime/transcript/{meeting_id}`。
+- 后端返回完整实时字幕、最新字幕和更新时间。
+- `/screen` 支持从 URL 读取 `meeting_id`。
+- `/screen` 每 2 秒自动刷新实时字幕。
+- `/screen` 显示最新字幕和最近 5 行字幕。
+- `/screen` 改为深色高对比大屏样式。
+- `/screen` 支持全屏投影。
+- 会议控制台新增 Open Screen Mode 按钮，打开 `/screen?meeting_id=当前会议ID`。
+- `/api/health` 版本更新为 Alpha 0.7。
+
+完成状态：代码实现完成，真实浏览器麦克风和投影人工验收需用户在本机执行。
+
+验收状态：
+
+- 后端 Python 编译检查通过。
+- 前端 `npm run build` 通过。
+- `/api/health` 返回 `Alpha 0.7`。
+- `/api/realtime/transcript/{meeting_id}` 返回实时字幕内容。
+- `/screen?meeting_id=xxx` 可打开并显示投屏页面。
+- 本次未开发英文翻译、双语字幕、会议纪要或 DOCX。
+
+下一步任务：
+
+- 2026-06-08-TASK-007：TransForum AI Alpha 0.8，中英双语字幕。
+
+## 2026-06-08-TASK-007
+
+任务编号：TASK 007
+
+时间标签：2026-06-08-TASK-007
+
+开发版本：TransForum AI Alpha 0.8
+
+任务名称：实时中英双语字幕
+
+修改文件：
+
+- README.md
+- backend/main.py
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 新增 SQLite 字段 `english_transcript_text`。
+- 新增 `translate_zh_to_en(text)` 翻译服务。
+- 翻译服务优先使用 Gemini API。
+- 未配置 Gemini API 时使用 Mock 翻译保证链路跑通。
+- 实时中文 chunk 识别成功后自动生成英文字幕。
+- 中文和英文字幕均写入 SQLite。
+- 新增 `GET /api/realtime/bilingual/{meeting_id}`。
+- 投屏页改为中文和 English 双语显示。
+- 投屏页保持 2 秒自动刷新。
+- Meeting Console 新增 Current Translation。
+- 按 Rule 2 更新 `docs/TECHNICAL_DEBT.md`。
+- `/api/health` 版本更新为 Alpha 0.8。
+
+完成状态：代码实现完成，真实 Gemini 在线翻译和浏览器麦克风投屏联动需按环境人工验收。
+
+验收状态：
+
+- 后端 Python 编译检查通过。
+- 前端 `npm run build` 通过。
+- `/api/health` 返回 `Alpha 0.8`。
+- `/api/realtime/bilingual/{meeting_id}` 返回 `chinese`、`english`、`updated_at`。
+- SQLite `meetings` 表包含 `english_transcript_text`。
+- 本次未开发会议纪要、DOCX、AI 语音播报、用户系统或支付系统。
+
+开发债务检查结果：
+
+- 新增债务：3 项。
+- 已解决债务：1 项。
+- 当前债务总数：3 项。
+
+下一步任务建议：
+
+- 2026-06-08-TASK-008：TransForum AI Alpha 0.9，会议存档与会后内容整理。
+
+## 2026-06-08-TASK-008
+
+任务编号：TASK 008
+
+时间标签：2026-06-08-TASK-008
+
+开发版本：TransForum AI Alpha 0.9
+
+任务名称：会议存档与 AI 会议纪要
+
+修改文件：
+
+- README.md
+- backend/main.py
+- backend/api/meeting.py
+- backend/api/minutes.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/minutes_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/meeting/minutes/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 新增 `meeting_archive` 表。
+- 新增会议纪要字段。
+- 会议结束时写入 `status=ended` 和 `ended_at`。
+- 会议结束时将会议内容 upsert 到 `meeting_archive`。
+- 新增 Rule Based 纪要生成服务。
+- 新增 `POST /api/minutes/generate`。
+- 新增 `/meeting/minutes?meeting_id=xxx` 页面。
+- Meeting Console 新增 End Meeting。
+- End Meeting 后归档、生成纪要并跳转纪要页。
+- `/api/health` 版本更新为 Alpha 0.9。
+
+完成状态：代码实现完成，真实浏览器点击 End Meeting 链路需人工验收。
+
+验收状态：
+
+- 后端 Python 编译检查通过。
+- 前端 `npm run build` 通过。
+- `/api/health` 返回 `Alpha 0.9`。
+- `/api/minutes/generate` 返回 `summary`、`key_points`、`action_items`、`next_steps`。
+- `meeting_archive` 写入归档记录。
+- 重新读取会议可查看已保存纪要字段。
+
+开发债务检查结果：
+
+- 新增债务：2 项。
+- 已解决债务：0 项。
+- 当前债务总数：5 项。
+
+下一阶段建议：
+
+- 2026-06-08-TASK-009：TransForum AI Alpha 1.0，First Real Meeting 演示闭环打磨。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

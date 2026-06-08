@@ -2,6 +2,222 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 0.9
+
+时间标签：2026-06-08-TASK-008
+
+新增：
+
+- `meeting_archive` 会议归档表。
+- `meetings` 表纪要字段：`minutes_summary`、`minutes_key_points`、`minutes_action_items`、`minutes_next_steps`。
+- `backend/services/minutes_service.py`。
+- `POST /api/minutes/generate`。
+- `/meeting/minutes?meeting_id=xxx` 会议纪要页面。
+- Meeting Console 的 End Meeting 按钮。
+- End Meeting 执行结束会议、归档、生成纪要并跳转纪要页。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 0.9。
+- 前端首页、metadata 和 package 版本更新到 Alpha 0.9。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT 更新到 Alpha 0.9。
+
+完成状态：代码实现完成，真实浏览器点击 End Meeting 链路需人工验收。
+
+验收结果：
+
+- 后端 Python 编译检查通过。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 0.9`。
+- `/api/minutes/generate` 返回 `summary`、`key_points`、`action_items`、`next_steps`。
+- `meeting_archive` 写入会议归档内容。
+- `/meeting/minutes?meeting_id=xxx` 页面可构建。
+
+技术债务：
+
+- 新增债务 2 项。
+- 已解决债务 0 项。
+- 当前债务总数 5 项。
+
+下一阶段建议：
+
+- 2026-06-08-TASK-009：TransForum AI Alpha 1.0，First Real Meeting 演示闭环打磨。
+
+## TransForum AI Alpha 0.8
+
+时间标签：2026-06-08-TASK-007
+
+新增：
+
+- SQLite 字段 `english_transcript_text`。
+- 翻译服务 `translate_zh_to_en(text)`。
+- Gemini API 优先翻译路径。
+- 未配置 Gemini API 时的 Mock 翻译回退。
+- 实时 chunk 中文识别后自动生成英文字幕。
+- `GET /api/realtime/bilingual/{meeting_id}`。
+- 投屏页中英双语字幕布局。
+- Meeting Console 显示 Current Translation。
+- `docs/TECHNICAL_DEBT.md` 技术债记录。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 0.8。
+- 前端首页、metadata 和 package 版本更新到 Alpha 0.8。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT 更新到 Alpha 0.8。
+
+修改文件：
+
+- backend/main.py
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- README.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+
+完成状态：代码实现完成，真实 Gemini 在线翻译和浏览器麦克风投屏联动需按环境人工验收。
+
+验收结果：
+
+- 后端 Python 编译检查通过。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 0.8`。
+- `/api/realtime/bilingual/{meeting_id}` 返回 `chinese`、`english`、`updated_at`。
+- SQLite `meetings` 表包含 `english_transcript_text`。
+- Mock 翻译链路可用。
+
+技术债务：
+
+- 新增债务 3 项。
+- 已解决债务 1 项。
+- 当前债务总数 3 项。
+
+下一步任务建议：
+
+- 2026-06-08-TASK-008：TransForum AI Alpha 0.9，会议存档与会后内容整理。
+
+## TransForum AI Alpha 0.7
+
+时间标签：2026-06-08-TASK-006
+
+新增：
+
+- `GET /api/realtime/transcript/{meeting_id}`。
+- `/screen?meeting_id=xxx` 中文字幕投屏大屏模式。
+- 投屏页显示最新字幕和最近 5 行字幕。
+- 投屏页每 2 秒自动刷新实时字幕。
+- 投屏页支持全屏投影。
+- 会议控制台打开当前会议投屏页按钮。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 0.7。
+- 前端首页、metadata 和 package 版本更新到 Alpha 0.7。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN 更新到 Alpha 0.7。
+
+修改文件：
+
+- backend/main.py
+- backend/api/realtime.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/meeting/live/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- README.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+
+完成状态：代码实现完成，真实浏览器投屏联动验收需用户在本机执行。
+
+验收结果：
+
+- 后端 Python 编译检查通过。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 0.7`。
+- `/api/realtime/transcript/{meeting_id}` 可读取实时字幕。
+- `/screen?meeting_id=xxx` 页面可打开并渲染大屏中文投屏样式。
+
+下一步任务：
+
+- 2026-06-08-TASK-007：TransForum AI Alpha 0.8，中英双语字幕。
+
+## TransForum AI Alpha 0.6
+
+时间标签：2026-06-08-TASK-005C
+
+新增：
+
+- 实时中文音频分片能力。
+- `POST /api/realtime/transcribe-chunk`。
+- 后端保存实时 chunk 到 `data/chunks`。
+- 本地 Whisper tiny 分片中文识别。
+- 会议控制台 Real-time Chinese Subtitles 区域。
+- Start Realtime Caption 和 Stop Realtime Caption。
+- 实时逐字稿 TXT 保存。
+- SQLite `realtime_transcript_text` 字段。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 0.6。
+- 前端首页、metadata 和 package 版本更新到 Alpha 0.6。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN 更新到 Alpha 0.6。
+
+修改文件：
+
+- backend/main.py
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- README.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+
+完成状态：代码实现完成，真实浏览器麦克风人工验收需用户在本机执行。
+
+验收结果：
+
+- 后端 Python 编译检查通过。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 0.6`。
+- `/api/realtime/transcribe-chunk` 已实现 multipart 接收、chunk 保存、本地模型识别、TXT 追加和 SQLite 追加。
+- 浏览器真实麦克风授权、朗读 10 到 15 秒和页面实时字幕显示需人工确认。
+
+下一步任务：
+
+- 2026-06-08-TASK-007：TransForum AI Alpha 0.8，中英双语字幕。
+
 ## TransForum AI Alpha 0.5.1
 
 时间标签：2026-06-08-TASK-005B-UAT

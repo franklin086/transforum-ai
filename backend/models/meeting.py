@@ -16,6 +16,12 @@ class Meeting(BaseModel):
     audio_duration: Optional[int] = None
     transcript_file: Optional[str] = None
     transcript_text: Optional[str] = None
+    realtime_transcript_text: Optional[str] = None
+    english_transcript_text: Optional[str] = None
+    minutes_summary: Optional[str] = None
+    minutes_key_points: Optional[str] = None
+    minutes_action_items: Optional[str] = None
+    minutes_next_steps: Optional[str] = None
     transcript_status: str = "pending"
 
 

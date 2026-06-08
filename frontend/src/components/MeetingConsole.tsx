@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  endMeeting,
+  generateMinutes,
   getMeeting,
   getTranscription,
   getWhisperModelStatus,
   startTranscription,
+  transcribeRealtimeChunk,
   uploadMeetingAudio
 } from "@/services/api";
 import type { Meeting } from "@/types/meeting";
@@ -21,7 +24,17 @@ function formatLanguage(code: string) {
   return languageLabels[code] ?? code;
 }
 
+function latestLineWithoutTimestamp(text?: string | null) {
+  const lines = (text ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const latestLine = lines.at(-1) ?? "";
+  return latestLine.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "");
+}
+
 export function MeetingConsole() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const meetingId = searchParams.get("meeting_id");
   const [meeting, setMeeting] = useState<Meeting | null>(null);
@@ -40,8 +53,19 @@ export function MeetingConsole() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [whisperStatus, setWhisperStatus] = useState("Checking...");
   const [isWhisperReady, setIsWhisperReady] = useState(false);
+  const [realtimeStatus, setRealtimeStatus] = useState("Stopped");
+  const [currentRealtimeChunk, setCurrentRealtimeChunk] = useState(0);
+  const [latestRealtimeText, setLatestRealtimeText] = useState("");
+  const [currentTranslation, setCurrentTranslation] = useState("");
+  const [realtimeTranscript, setRealtimeTranscript] = useState("");
+  const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
+  const [isEndingMeeting, setIsEndingMeeting] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const realtimeRecorderRef = useRef<MediaRecorder | null>(null);
+  const realtimeStreamRef = useRef<MediaStream | null>(null);
+  const realtimeChunkIndexRef = useRef(0);
+  const realtimeActiveRef = useRef(false);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<number | null>(null);
   const startedAtRef = useRef<number | null>(null);
@@ -59,6 +83,10 @@ export function MeetingConsole() {
         setTranscriptStatus(result.meeting.transcript_status);
         setTranscriptPreview(result.meeting.transcript_text?.slice(0, 500) ?? "");
         setTranscriptFile(result.meeting.transcript_file ?? null);
+        setRealtimeTranscript(result.meeting.realtime_transcript_text ?? "");
+        setCurrentTranslation(
+          latestLineWithoutTimestamp(result.meeting.english_transcript_text)
+        );
         setError(null);
       })
       .catch(() => {
@@ -87,6 +115,11 @@ export function MeetingConsole() {
         window.clearInterval(timerRef.current);
       }
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      realtimeActiveRef.current = false;
+      if (realtimeRecorderRef.current?.state === "recording") {
+        realtimeRecorderRef.current.stop();
+      }
+      realtimeStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -108,6 +141,123 @@ export function MeetingConsole() {
       return "audio/webm";
     }
     return "";
+  }
+
+  function formatRealtimeTimestamp(chunkIndex: number) {
+    const totalSeconds = Math.max(chunkIndex, 1) * 3;
+    const hours = Math.floor(totalSeconds / 3600)
+      .toString()
+      .padStart(2, "0");
+    const minutes = Math.floor((totalSeconds % 3600) / 60)
+      .toString()
+      .padStart(2, "0");
+    const seconds = Math.floor(totalSeconds % 60)
+      .toString()
+      .padStart(2, "0");
+    return `[${hours}:${minutes}:${seconds}]`;
+  }
+
+  async function uploadRealtimeAudioChunk(audioBlob: Blob, chunkIndex: number) {
+    if (!meetingId || audioBlob.size === 0) {
+      return;
+    }
+
+    setRealtimeStatus("Uploading Chunk...");
+    setCurrentRealtimeChunk(chunkIndex);
+
+    try {
+      const result = await transcribeRealtimeChunk(
+        meetingId,
+        chunkIndex,
+        audioBlob
+      );
+      if (!result.success) {
+        setRealtimeStatus("Transcription Failed");
+        setError(result.message);
+        return;
+      }
+
+      const text = result.text.trim();
+      if (text) {
+        const line = `${formatRealtimeTimestamp(result.chunk_index)} ${text}`;
+        setLatestRealtimeText(text);
+        setCurrentTranslation(result.english_text?.trim() ?? "");
+        setRealtimeTranscript((current) =>
+          current ? `${current}\n${line}` : line
+        );
+      }
+      setRealtimeStatus(realtimeActiveRef.current ? "Listening..." : "Stopped");
+    } catch {
+      setRealtimeStatus("Upload Failed");
+      setError("Realtime chunk upload failed. Confirm the backend is running.");
+    }
+  }
+
+  async function handleStartRealtimeCaption() {
+    if (!meetingId) {
+      setError("Please create a meeting before starting realtime captions.");
+      return;
+    }
+
+    setError(null);
+    setRealtimeStatus("Requesting Microphone...");
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false
+      });
+      const mimeType = getSupportedMimeType();
+      const recorder = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType } : undefined
+      );
+
+      realtimeChunkIndexRef.current = 0;
+      realtimeActiveRef.current = true;
+      realtimeStreamRef.current = stream;
+      realtimeRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (!realtimeActiveRef.current || event.data.size === 0) {
+          return;
+        }
+        realtimeChunkIndexRef.current += 1;
+        void uploadRealtimeAudioChunk(
+          new Blob([event.data], { type: recorder.mimeType || "audio/webm" }),
+          realtimeChunkIndexRef.current
+        );
+      };
+
+      recorder.onstop = () => {
+        realtimeActiveRef.current = false;
+        setIsRealtimeCaptioning(false);
+        setRealtimeStatus("Stopped");
+        stream.getTracks().forEach((track) => track.stop());
+        realtimeRecorderRef.current = null;
+        realtimeStreamRef.current = null;
+      };
+
+      recorder.start(3000);
+      setIsRealtimeCaptioning(true);
+      setRealtimeStatus("Listening...");
+      setCurrentRealtimeChunk(0);
+      setLatestRealtimeText("");
+      setCurrentTranslation("");
+    } catch {
+      setRealtimeStatus("Microphone Permission Denied");
+      setError("Could not access microphone for realtime captions.");
+    }
+  }
+
+  function handleStopRealtimeCaption() {
+    realtimeActiveRef.current = false;
+    if (realtimeRecorderRef.current?.state === "recording") {
+      realtimeRecorderRef.current.stop();
+    }
+    realtimeStreamRef.current?.getTracks().forEach((track) => track.stop());
+    setIsRealtimeCaptioning(false);
+    setRealtimeStatus("Stopped");
   }
 
   async function handleStartMeeting() {
@@ -256,6 +406,26 @@ export function MeetingConsole() {
     }
   }
 
+  async function handleEndMeeting() {
+    if (!meetingId) {
+      setError("Please create a meeting before ending it.");
+      return;
+    }
+
+    setError(null);
+    setIsEndingMeeting(true);
+    handleStopRealtimeCaption();
+
+    try {
+      await endMeeting(meetingId);
+      await generateMinutes(meetingId);
+      router.push(`/meeting/minutes?meeting_id=${encodeURIComponent(meetingId)}`);
+    } catch {
+      setIsEndingMeeting(false);
+      setError("End Meeting failed. Confirm the backend is running.");
+    }
+  }
+
   if (!meetingId) {
     return (
       <section className="mt-8 rounded-lg border border-slate-200 bg-white p-8">
@@ -384,6 +554,61 @@ export function MeetingConsole() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+              Real-time Chinese Subtitles
+            </h2>
+            <p className="mt-3 text-xl font-bold">
+              Realtime Status: {realtimeStatus}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Current Chunk: {currentRealtimeChunk}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Latest Text: {latestRealtimeText || "No realtime text yet."}
+            </p>
+            <p className="mt-2 text-sm text-slate-600">
+              Current Translation: {currentTranslation || "No English subtitle yet."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              className="rounded-lg border border-meeting-blue px-5 py-3 text-sm font-semibold text-meeting-blue hover:bg-blue-50"
+              href={`/screen?meeting_id=${encodeURIComponent(meetingId)}`}
+              target="_blank"
+            >
+              Open Screen Mode
+            </Link>
+            <button
+              className="rounded-lg bg-meeting-blue px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={isRealtimeCaptioning || !isWhisperReady}
+              onClick={handleStartRealtimeCaption}
+              type="button"
+            >
+              Start Realtime Caption
+            </button>
+            <button
+              className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={!isRealtimeCaptioning}
+              onClick={handleStopRealtimeCaption}
+              type="button"
+            >
+              Stop Realtime Caption
+            </button>
+          </div>
+        </div>
+        <div className="mt-5 rounded-lg bg-slate-50 p-4">
+          <h3 className="text-sm font-semibold text-slate-500">
+            Full Realtime Transcript
+          </h3>
+          <p className="mt-3 max-h-72 overflow-y-auto whitespace-pre-wrap text-slate-800">
+            {realtimeTranscript || "Realtime Chinese subtitles will appear here."}
+          </p>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-lg border border-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
               Speech Recognition
             </h2>
             <p className="mt-3 text-xl font-bold">
@@ -438,6 +663,14 @@ export function MeetingConsole() {
           type="button"
         >
           Stop Meeting
+        </button>
+        <button
+          className="rounded-lg bg-red-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+          disabled={isEndingMeeting}
+          onClick={handleEndMeeting}
+          type="button"
+        >
+          {isEndingMeeting ? "Generating Minutes..." : "End Meeting"}
         </button>
       </div>
     </>

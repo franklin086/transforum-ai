@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 0.5.1
+当前版本：TransForum AI Alpha 0.9
 
 当前项目根目录：
 
@@ -43,7 +43,40 @@ TransForum AI 的目标不是做一个功能丰富的翻译软件，而是让任
 
 这条规则用于确保即使半年后继续开发，也可以通过项目文档迅速恢复上下文，而不需要反复依赖截图、聊天记录或复制大量内容。
 
-## Rule 2：默认使用中文进行项目沟通与文档记录
+## Rule 2：Technical Debt Tracking
+
+从 Alpha 0.8 开始，每个 TASK 完成时必须检查并记录技术债务。
+
+每次 TASK 完成时必须检查：
+
+1. 遗留问题
+2. 临时方案
+3. 未自动化验收部分
+4. 环境依赖问题
+5. 性能风险
+
+检查结果必须同步更新：
+
+- `docs/TECHNICAL_DEBT.md`
+
+禁止仅记录在聊天记录中。
+
+最终报告必须增加：
+
+```text
+开发债务检查结果
+
+新增债务：
+...
+
+已解决债务：
+...
+
+当前债务总数：
+...
+```
+
+## Rule 3：默认使用中文进行项目沟通与文档记录
 
 所有开发过程汇报、设计方案、验收报告默认使用中文。
 
@@ -102,6 +135,7 @@ http://localhost:8000/api/health
 - `/`
 - `/meeting/new`
 - `/meeting/live`
+- `/meeting/minutes`
 - `/screen`
 
 ## 当前可用功能
@@ -119,6 +153,22 @@ http://localhost:8000/api/health
 - 将 `transcript_status`、`transcript_file`、`transcript_text` 写入 SQLite
 - 会议控制台显示转写状态和前 500 字预览
 - Whisper 本地模型检查
+- 前端每 3 秒生成实时音频分片
+- `POST /api/realtime/transcribe-chunk` 使用本地 Whisper tiny 识别中文分片
+- 会议控制台实时显示中文滚动字幕
+- 实时逐字稿保存到 TXT 和 SQLite `realtime_transcript_text`
+- `/screen?meeting_id=xxx` 中文字幕投屏大屏模式
+- 投屏页每 2 秒自动刷新实时字幕
+- 会议控制台可打开当前会议投屏页
+- 实时中文识别后自动生成英文字幕
+- SQLite 保存 `english_transcript_text`
+- `/api/realtime/bilingual/{meeting_id}` 返回中英双语字幕
+- 投屏页同步显示中文与 English 字幕
+- 会议控制台显示 Current Translation
+- 结束会议并归档到 `meeting_archive`
+- Rule Based 会议纪要生成
+- 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
+- 重新打开会议可查看历史纪要
 
 ## 当前 API
 
@@ -130,6 +180,10 @@ http://localhost:8000/api/health
 - `POST /api/transcription/start`
 - `GET /api/transcription/{meeting_id}`
 - `GET /api/transcription/model-status`
+- `POST /api/realtime/transcribe-chunk`
+- `GET /api/realtime/transcript/{meeting_id}`
+- `GET /api/realtime/bilingual/{meeting_id}`
+- `POST /api/minutes/generate`
 - `POST /api/meeting/start`
 - `POST /api/meeting/end`
 - `POST /api/meeting/export`
@@ -252,7 +306,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 0.5.1
+TransForum AI Alpha 0.9
 ```
 
 版本规则：
@@ -266,9 +320,10 @@ TransForum AI Alpha 0.5.1
 - Alpha 0.4.2：Whisper tiny 本地模型 Ready 验证完成
 - Alpha 0.5：本地 Whisper 中文逐字稿可用
 - Alpha 0.5.1：办公电脑 Whisper tiny 本地模型安装与中文逐字稿 UAT 通过
-- Alpha 0.6：中英翻译基础能力可用
-- Alpha 0.7：会议存档可用
-- Alpha 0.8：会议纪要生成可用
+- Alpha 0.6：实时中文字幕基础能力可用
+- Alpha 0.7：中文字幕投屏模式可用
+- Alpha 0.8：中英双语字幕可用
+- Alpha 0.9：会议存档与会后内容整理可用
 - Alpha 1.0：First Real Meeting 完整闭环可演示
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。

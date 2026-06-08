@@ -6,7 +6,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-slate-50 px-6 py-10 text-ink">
       <section className="mx-auto flex min-h-[80vh] max-w-5xl flex-col justify-center">
         <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-meeting-blue">
-          Alpha 0.5.1
+          Alpha 0.9
         </p>
         <h1 className="max-w-3xl text-5xl font-bold leading-tight md:text-7xl">
           TransForum AI

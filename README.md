@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 0.4.2
+当前版本：TransForum AI Alpha 0.5.1
 
 当前项目根目录：
 
@@ -42,6 +42,14 @@ TransForum AI 的目标不是做一个功能丰富的翻译软件，而是让任
 - 下一步任务
 
 这条规则用于确保即使半年后继续开发，也可以通过项目文档迅速恢复上下文，而不需要反复依赖截图、聊天记录或复制大量内容。
+
+## Rule 2：默认使用中文进行项目沟通与文档记录
+
+所有开发过程汇报、设计方案、验收报告默认使用中文。
+
+代码中的变量名、API 路径、数据库字段保持英文。
+
+文档、说明、开发日志、验收结果统一使用中文。
 
 ## First Real Meeting 核心流程
 
@@ -107,6 +115,9 @@ http://localhost:8000/api/health
 - 保存测试音频文件
 - Whisper 录音文件识别
 - 生成中文逐字稿
+- 保存中文逐字稿 TXT 文件
+- 将 `transcript_status`、`transcript_file`、`transcript_text` 写入 SQLite
+- 会议控制台显示转写状态和前 500 字预览
 - Whisper 本地模型检查
 
 ## 当前 API
@@ -198,6 +209,20 @@ Systran/faster-whisper-tiny
 docs/WHISPER_MODEL_SETUP.md
 ```
 
+## Alpha 0.5.1 办公电脑 UAT
+
+时间标签：2026-06-08-TASK-005B-UAT
+
+验收结论：
+
+- Whisper tiny 模型已安装到 `D:\transforum-ai\models\whisper\tiny`。
+- `/api/transcription/model-status` 返回 `installed=true`、`message=Ready`。
+- 办公电脑本地测试音频已保存到 `D:\transforum-ai\data\audio\meeting_29357c757f4b_20260608_084530.wav`。
+- 中文逐字稿已保存到 `D:/transforum-ai/data/transcripts/meeting_29357c757f4b_transcript.txt`。
+- SQLite 已写入 `transcript_status=completed`、`transcript_file`、`transcript_text`。
+- 识别耗时约 4.57 秒。
+- 业务转写使用 `local_files_only=True`，不依赖运行时在线下载。
+
 ## Codex Task Label Rule
 
 所有 Codex 工作指令必须包含时间标签，格式为：
@@ -227,7 +252,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 0.4.2
+TransForum AI Alpha 0.5.1
 ```
 
 版本规则：
@@ -236,10 +261,14 @@ TransForum AI Alpha 0.4.2
 - Alpha 0.1.1：项目迁移到 D:\transforum-ai 并建立任务标签与版本规则
 - Alpha 0.2：会议创建与基础控制台可用
 - Alpha 0.3：麦克风接入与语音识别可用
-- Alpha 0.4：中英实时翻译可用
-- Alpha 0.5：双语字幕投屏可用
-- Alpha 0.6：会议存档可用
-- Alpha 0.7：会议纪要生成可用
+- Alpha 0.4：录音文件 Whisper 识别入口可用
+- Alpha 0.4.1：Whisper 本地模型优先管理可用
+- Alpha 0.4.2：Whisper tiny 本地模型 Ready 验证完成
+- Alpha 0.5：本地 Whisper 中文逐字稿可用
+- Alpha 0.5.1：办公电脑 Whisper tiny 本地模型安装与中文逐字稿 UAT 通过
+- Alpha 0.6：中英翻译基础能力可用
+- Alpha 0.7：会议存档可用
+- Alpha 0.8：会议纪要生成可用
 - Alpha 1.0：First Real Meeting 完整闭环可演示
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。

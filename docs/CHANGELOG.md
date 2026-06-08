@@ -2,6 +2,95 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 0.5.1
+
+时间标签：2026-06-08-TASK-005B-UAT
+
+新增：
+
+- 办公电脑本地 Whisper tiny 模型安装验收记录。
+- 办公电脑中文测试音频逐字稿验收记录。
+
+变更：
+
+- 当前版本更新为 Alpha 0.5.1。
+- README 与项目状态文档记录办公电脑 UAT 结果。
+- `/api/health` 返回版本更新为 `Alpha 0.5.1`。
+- 前端首页和页面 metadata 更新为 Alpha 0.5.1。
+
+验收结果：
+
+- `scripts/download_whisper_tiny.py` 下载 `Systran/faster-whisper-tiny` 成功。
+- tiny 模型已保存到 `D:\transforum-ai\models\whisper\tiny`。
+- `model-status` 返回 `installed=true`、`message=Ready`。
+- UAT 测试会议：`meeting_29357c757f4b`。
+- 测试音频：`D:\transforum-ai\data\audio\meeting_29357c757f4b_20260608_084530.wav`。
+- 逐字稿文件：`D:/transforum-ai/data/transcripts/meeting_29357c757f4b_transcript.txt`。
+- `transcript_status=completed`。
+- 识别耗时约 4.57 秒。
+- 业务转写仍使用本地模型，不依赖运行时在线下载。
+
+下一步任务：
+
+- 2026-06-08-TASK-006：TransForum AI Alpha 0.6，中英翻译基础能力。
+
+## TransForum AI Alpha 0.5
+
+时间标签：2026-06-08-TASK-005B
+
+新增：
+
+- 本地 Whisper 中文逐字稿生成能力。
+- 逐字稿 TXT 保存到 `data/transcripts`。
+- 逐字稿结果写入 SQLite。
+- 后端转写服务单元测试。
+- PROJECT_RULES Rule 2：默认中文汇报和文档规则。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 0.5。
+- `POST /api/transcription/start` 改为同步返回转写最终结果。
+- Whisper 转写参数固定为 `language="zh"`、`task="transcribe"`。
+- Whisper 模型加载保持 `local_files_only=True`。
+- 前端 Generate Transcript 在处理中显示 `Processing...`。
+- 前端成功后直接显示 `Completed` 和逐字稿预览。
+- README、CURRENT_STATUS、TASK_HISTORY、DEVELOPMENT_PLAN、WHISPER_MODEL_SETUP 更新到 Alpha 0.5。
+
+修改文件：
+
+- PROJECT_RULES.md
+- README.md
+- backend/main.py
+- backend/api/transcription.py
+- backend/services/transcription_service.py
+- backend/tests/test_transcription_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/WHISPER_MODEL_SETUP.md
+
+完成状态：代码实现完成；真实 Whisper 转写验收受本机资源缺失阻塞。
+
+验收结果：
+
+- 后端单元测试已通过。
+- 后端 Python 编译检查已通过。
+- 前端 `npm run build` 已通过。
+- `GET /api/transcription/model-status` 当前返回 `installed=false`、`message=Model not found`。
+- 指定验收音频不存在，当前 SQLite 无可复用会议记录。
+- 真实音频转写、TXT 实际生成、SQLite 实际写入和前端真实点击验收需在本地模型与音频恢复后执行。
+
+下一步任务：
+
+- 2026-06-08-TASK-006：TransForum AI Alpha 0.6，中英翻译基础能力。
+
 ## TransForum AI Alpha 0.4.2
 
 时间标签：2026-06-07-TASK-005A-UAT

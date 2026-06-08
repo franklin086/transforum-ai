@@ -236,7 +236,16 @@ export function MeetingConsole() {
       if (!startResult.success) {
         setTranscriptStatus("failed");
         setIsTranscribing(false);
-        setError("Please install Whisper model first.");
+        setError(startResult.message);
+        return;
+      }
+      if (startResult.status === "completed") {
+        setTranscriptStatus("completed");
+        setTranscriptPreview(startResult.transcript?.slice(0, 500) ?? "");
+        setTranscriptFile(startResult.transcript_file ?? null);
+        setIsTranscribing(false);
+        const refreshed = await getMeeting(meetingId);
+        setMeeting(refreshed.meeting);
         return;
       }
       await pollTranscriptionStatus(meetingId);
@@ -400,7 +409,7 @@ export function MeetingConsole() {
             onClick={handleGenerateTranscript}
             type="button"
           >
-            {isTranscribing ? "Generating..." : "Generate Transcript"}
+            {isTranscribing ? "Processing..." : "Generate Transcript"}
           </button>
         </div>
         <div className="mt-5 rounded-lg bg-slate-50 p-4">

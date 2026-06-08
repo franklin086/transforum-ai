@@ -427,6 +427,116 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - TASK 005B：本地 Whisper 中文识别验证
 
+## 2026-06-08-TASK-005B
+
+任务编号：TASK 005B
+
+时间标签：2026-06-08-TASK-005B
+
+开发版本：TransForum AI Alpha 0.5
+
+任务名称：本地 Whisper 中文逐字稿能力
+
+修改文件：
+
+- PROJECT_RULES.md
+- README.md
+- backend/main.py
+- backend/api/transcription.py
+- backend/services/transcription_service.py
+- backend/tests/test_transcription_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/WHISPER_MODEL_SETUP.md
+
+完成内容：
+
+- `POST /api/transcription/start` 改为同步执行本地 Whisper 转写并返回最终结果。
+- 使用 `D:\transforum-ai\models\whisper\tiny` 本地模型目录。
+- 保持 `local_files_only=True`，运行时不自动访问 Hugging Face。
+- 转写参数设置为 `language="zh"`、`task="transcribe"`。
+- 成功后保存 `data/transcripts/meeting_{meeting_id}_transcript.txt`。
+- 成功后写入 SQLite：`transcript_status=completed`、`transcript_file`、`transcript_text`。
+- 失败时写入 `transcript_status=failed`，不清空原有 `audio_file`。
+- 前端 Generate Transcript 显示 `Processing...`、成功后显示 `Completed` 和前 500 字预览。
+- 新增后端 `unittest` 覆盖缺少音频、缺少模型、成功写 TXT/SQLite。
+- 新增 PROJECT_RULES Rule 2：默认中文汇报和文档规则。
+
+完成状态：代码实现完成；真实 Whisper 转写验收受本机资源缺失阻塞。
+
+验收状态：
+
+- 后端单元测试已通过。
+- 后端 Python 编译检查已通过。
+- 前端 `npm run build` 已通过。
+- `GET /api/transcription/model-status` 当前返回 `installed=false`、`message=Model not found`。
+- 指定验收音频不存在，当前 SQLite 无可复用会议记录。
+- 真实音频转写、TXT 实际生成、SQLite 实际写入和前端真实点击验收需在本地模型与音频恢复后执行。
+
+下一步任务：
+
+- 2026-06-08-TASK-006：TransForum AI Alpha 0.6，中英翻译基础能力。
+
+## 2026-06-08-TASK-005B-UAT
+
+任务编号：TASK 005B-UAT
+
+时间标签：2026-06-08-TASK-005B-UAT
+
+开发版本：TransForum AI Alpha 0.5.1
+
+任务名称：办公电脑 Whisper tiny 本地模型安装与中文逐字稿 UAT
+
+修改文件：
+
+- README.md
+- backend/main.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+
+完成内容：
+
+- 执行 `git pull`，确认代码已是最新。
+- 运行 `scripts/download_whisper_tiny.py` 下载 `Systran/faster-whisper-tiny`。
+- 模型保存到 `D:\transforum-ai\models\whisper\tiny`。
+- 验证模型关键文件：`config.json`、`model.bin`、`tokenizer.json`、`vocabulary.txt`。
+- 验证 `GET /api/transcription/model-status` 返回 `installed=true`、`message=Ready`。
+- 创建 UAT 测试会议 `meeting_29357c757f4b`。
+- 上传办公电脑本地测试音频到 `data/audio`。
+- 调用 `POST /api/transcription/start` 完成中文逐字稿生成。
+- 生成 TXT 文件到 `data/transcripts`。
+- SQLite 写入 `transcript_status=completed`、`transcript_file`、`transcript_text`。
+- 版本更新到 Alpha 0.5.1。
+
+验收结果：
+
+- 模型状态：Ready。
+- 测试音频：`D:\transforum-ai\data\audio\meeting_29357c757f4b_20260608_084530.wav`。
+- 逐字稿文件：`D:/transforum-ai/data/transcripts/meeting_29357c757f4b_transcript.txt`。
+- 识别耗时：约 4.57 秒。
+- 识别结果预览：`大家好,欢迎参加Transform来来测识会议。今天我们正在测识中文语音时别功能。`
+- 后端单元测试通过。
+- 前端构建通过。
+- 业务转写不依赖运行时在线下载。
+- 浏览器真实麦克风授权与人工朗读步骤无法由 Codex 代替执行；本次使用办公电脑本地中文语音测试音频完成后端到数据库链路验收。
+
+下一步任务：
+
+- 2026-06-08-TASK-006：TransForum AI Alpha 0.6，中英翻译基础能力。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

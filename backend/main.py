@@ -6,7 +6,7 @@ from api.meeting import router as meeting_router
 from api.transcription import router as transcription_router
 from database.connection import init_db
 
-app = FastAPI(title="TransForum AI", version="Alpha 0.4.2")
+app = FastAPI(title="TransForum AI", version="Alpha 0.5.1")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,7 +22,7 @@ def health_check():
     return {
         "status": "ok",
         "project": "TransForum AI",
-        "version": "Alpha 0.4.2",
+        "version": "Alpha 0.5.1",
     }
 
 

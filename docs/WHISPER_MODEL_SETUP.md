@@ -1,102 +1,22 @@
 # Whisper Model Setup
 
-## Whisper 模型目录
+## 模型目录
+
+默认模型根目录：
 
 ```text
 D:\transforum-ai\models\whisper
 ```
 
-当前 tiny 模型安装目录：
+当前 tiny 模型目录：
 
 ```text
 D:\transforum-ai\models\whisper\tiny
 ```
-
-## 支持模型
-
-- tiny
-- base
-- small
-- medium
-
-## 推荐选择
-
-开发阶段：
-
-```text
-tiny
-```
-
-生产阶段：
-
-```text
-base
-```
-
-## 当前安装结果
-
-时间标签：2026-06-07-TASK-005A-UAT
-
-开发版本号：TransForum AI Alpha 0.4.2
-
-下载来源：
-
-```text
-Systran/faster-whisper-tiny
-```
-
-保存路径：
-
-```text
-D:\transforum-ai\models\whisper\tiny
-```
-
-关键文件：
-
-- config.json
-- model.bin
-- tokenizer.json
-- vocabulary.txt
-- README.md
-- .gitattributes
-
-## 安装方式
-
-优先使用可控脚本安装：
-
-```bash
-cd /d D:\transforum-ai
-python scripts\download_whisper_tiny.py
-```
-
-脚本会将模型下载到：
-
-```text
-D:\transforum-ai\models\whisper\tiny
-```
-
-业务接口不会在运行时自动下载模型。
-
-## 手动安装方式
-
-如果网络下载失败，可以手动下载 faster-whisper 兼容模型，并复制到：
-
-```text
-D:\transforum-ai\models\whisper\tiny
-```
-
-目录内至少应包含：
-
-- config.json
-- model.bin
-- tokenizer.json
-- vocabulary.txt
-
-复制完成后重启后端，再访问模型状态接口验证。
 
 ## 后端配置
 
-后端配置文件：
+配置文件：
 
 ```text
 D:\transforum-ai\backend\.env
@@ -107,25 +27,46 @@ D:\transforum-ai\backend\.env
 ```text
 TRANSFORUM_WHISPER_MODEL=tiny
 TRANSFORUM_WHISPER_MODEL_PATH=D:/transforum-ai/models/whisper
+TRANSFORUM_WHISPER_DEVICE=cpu
+TRANSFORUM_WHISPER_COMPUTE_TYPE=int8
 ```
 
-系统会优先检查：
+## 运行要求
+
+会议转写必须使用本地模型：
 
 ```text
 D:\transforum-ai\models\whisper\tiny
 ```
 
-如果模型不存在，系统返回 `MODEL_NOT_FOUND`，不自动访问 Hugging Face，也不联网下载模型。
+业务转写时必须保持：
 
-## 验证接口
+- `local_files_only=True`
+- `language="zh"`
+- `task="transcribe"`
+
+如果模型不存在，系统返回：
+
+```json
+{
+  "success": false,
+  "error": "MODEL_NOT_FOUND",
+  "message": "Local Whisper model not found.",
+  "status": "failed"
+}
+```
+
+系统不得在业务转写时自动访问 Hugging Face，也不得在业务接口中自动下载模型。
+
+## 状态检查
 
 启动后端后访问：
 
 ```text
-http://localhost:8000/api/transcription/model-status
+GET http://localhost:8000/api/transcription/model-status
 ```
 
-当前验收结果：
+Ready 示例：
 
 ```json
 {
@@ -137,4 +78,51 @@ http://localhost:8000/api/transcription/model-status
 }
 ```
 
-显示 `Ready` 后，即可进入下一步 TASK 005B：本地 Whisper 中文识别验证。
+## 转写输出
+
+成功调用：
+
+```text
+POST http://localhost:8000/api/transcription/start
+```
+
+请求体：
+
+```json
+{
+  "meeting_id": "meeting_xxx"
+}
+```
+
+成功返回：
+
+```json
+{
+  "success": true,
+  "status": "completed",
+  "transcript": "大家好，欢迎参加 TransForum AI 测试会议。",
+  "transcript_file": "D:/transforum-ai/data/transcripts/meeting_xxx_transcript.txt"
+}
+```
+
+逐字稿保存目录：
+
+```text
+D:\transforum-ai\data\transcripts
+```
+
+文件命名规则：
+
+```text
+meeting_{meeting_id}_transcript.txt
+```
+
+## Alpha 0.5 验收重点
+
+- 本地 tiny 模型可加载。
+- webm 音频可被识别。
+- 中文逐字稿可生成。
+- TXT 文件可保存。
+- SQLite 可写入 `transcript_status`、`transcript_file`、`transcript_text`。
+- 前端会议控制台可显示 `Completed` 和逐字稿预览。
+- 业务转写不依赖运行时在线下载。

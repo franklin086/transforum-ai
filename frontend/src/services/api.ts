@@ -83,15 +83,17 @@ export async function startTranscription(meetingId: string) {
   return requestJson<
     | {
         success: true;
-        status: "processing";
+        status: "processing" | "completed";
+        transcript?: string;
+        transcript_file?: string | null;
       }
     | {
         success: false;
-        error: "MODEL_NOT_FOUND";
+        error: string;
         message: string;
         status: "failed";
-        model: string;
-        path: string;
+        model?: string;
+        path?: string;
       }
   >("/api/transcription/start", {
     method: "POST",

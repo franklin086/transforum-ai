@@ -1,10 +1,10 @@
-# TransForum AI Alpha 1.1.1 Demo Guide
+# TransForum AI Alpha 1.1.2 Demo Guide
 
 ## 演示目标
 
 一个人、一台电脑、一个麦克风、一台投影仪，5 分钟内启动一场中英双语 AI 同传会议，并生成会议纪要。
 
-Alpha 1.1.1 在 Alpha 1.0 First Real Meeting Demo 的基础上验证本机 Gemini API Key 可用，并继续保留演示启动检查流程。
+Alpha 1.1.2 在 Alpha 1.0 First Real Meeting Demo 的基础上优化 Gemini 翻译质量、稳定性和延迟显示，并继续保留演示启动检查流程。
 
 ## 演示前环境检查
 
@@ -42,7 +42,7 @@ http://localhost:8000
 {
   "status": "ok",
   "project": "TransForum AI",
-  "version": "Alpha 1.1.1"
+  "version": "Alpha 1.1.2"
 }
 ```
 
@@ -105,3 +105,4 @@ scripts\demo_checklist.md
 - 投屏刷新仍为轮询，后续可升级 WebSocket。
 - 新增启动脚本仍需在不同 Windows 环境反复测试。
 - Gemini API Key 已在本机验证可用；其他演示电脑仍需要本地配置。
+- Gemini 延迟已显示为毫秒数，但真实会议长时间延迟仍需继续测试。

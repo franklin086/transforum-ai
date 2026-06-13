@@ -1,4 +1,11 @@
+import re
+import time
+
 from config import GEMINI_API_KEY, GEMINI_TRANSLATION_MODEL
+
+
+RATE_LIMIT_PATTERNS = ("rate limit", "quota", "429", "resource exhausted")
+NETWORK_PATTERNS = ("timeout", "timed out", "connection", "network", "dns")
 
 
 def _mock_translate_zh_to_en(text: str) -> str:
@@ -8,14 +15,54 @@ def _mock_translate_zh_to_en(text: str) -> str:
     return "[Mock EN] Hello everyone, welcome to the meeting."
 
 
+def remove_translation_noise(text: str) -> str:
+    cleaned = (text or "").strip()
+    cleaned = re.sub(r"^```(?:\w+)?", "", cleaned).strip()
+    cleaned = re.sub(r"```$", "", cleaned).strip()
+    cleaned = re.sub(
+        r"^(translation|english|translated text|the translation is)\s*:\s*",
+        "",
+        cleaned,
+        flags=re.IGNORECASE,
+    ).strip()
+    cleaned = cleaned.strip(" \t\r\n\"'“”‘’")
+    cleaned = re.sub(r"[*_`#>]+", "", cleaned)
+    cleaned = re.sub(r"\s*\n+\s*", " ", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    return cleaned.strip()
+
+
 def _build_translation_prompt(text: str) -> str:
     return (
-        "Translate Chinese meeting subtitles into natural English.\n"
-        "Keep the translation concise.\n"
-        "Do not add explanations.\n"
-        "Do not include quotation marks.\n\n"
+        "You are a professional conference interpreter.\n\n"
+        "Task:\n"
+        "Translate Chinese live meeting subtitles into concise, natural English subtitles.\n\n"
+        "Rules:\n"
+        "1. Keep the translation concise.\n"
+        "2. Preserve the speaker's meaning.\n"
+        "3. Do not add explanations.\n"
+        "4. Do not add quotation marks.\n"
+        "5. Do not output markdown.\n"
+        "6. Do not say \"Translation:\".\n"
+        "7. If the Chinese sentence is incomplete, translate naturally without over-explaining.\n"
+        "8. Keep names, organizations, and acronyms accurate.\n"
+        "9. Use formal but natural conference English.\n"
+        "10. Output English only.\n\n"
+        "Input example:\n"
+        "大家好，欢迎参加今天的论坛。\n\n"
+        "Output example:\n"
+        "Good morning, everyone. Welcome to today's forum.\n\n"
         f"Chinese subtitle:\n{text}"
     )
+
+
+def _classify_gemini_error(error: Exception) -> str:
+    message = str(error).lower()
+    if any(pattern in message for pattern in RATE_LIMIT_PATTERNS):
+        return "GEMINI_RATE_LIMIT"
+    if any(pattern in message for pattern in NETWORK_PATTERNS):
+        return "GEMINI_NETWORK_ERROR"
+    return "GEMINI_API_ERROR"
 
 
 def _translate_with_gemini(text: str) -> str:
@@ -26,10 +73,21 @@ def _translate_with_gemini(text: str) -> str:
         model=GEMINI_TRANSLATION_MODEL,
         contents=_build_translation_prompt(text),
     )
-    translated = (getattr(response, "text", "") or "").strip()
+    translated = remove_translation_noise(getattr(response, "text", "") or "")
     if not translated:
         raise ValueError("Gemini returned an empty translation.")
-    return translated.strip('"').strip("'").strip()
+    return translated
+
+
+def _fallback_result(source_text: str, error_code: str, latency_ms: int = 0) -> dict:
+    return {
+        "success": False,
+        "provider": "mock",
+        "source_text": source_text,
+        "translated_text": _mock_translate_zh_to_en(source_text),
+        "latency_ms": latency_ms,
+        "error": error_code,
+    }
 
 
 def translate_zh_to_en(text: str) -> dict:
@@ -41,28 +99,36 @@ def translate_zh_to_en(text: str) -> dict:
             "provider": "mock" if not GEMINI_API_KEY else "gemini",
             "source_text": "",
             "translated_text": "",
+            "latency_ms": 0,
+            "error": None,
         }
 
     if not GEMINI_API_KEY:
-        return {
-            "success": True,
-            "provider": "mock",
-            "source_text": normalized,
-            "translated_text": _mock_translate_zh_to_en(normalized),
-        }
+        return _fallback_result(normalized, "GEMINI_API_KEY_MISSING")
 
-    try:
-        return {
-            "success": True,
-            "provider": "gemini",
-            "source_text": normalized,
-            "translated_text": _translate_with_gemini(normalized),
-        }
-    except Exception as error:
-        return {
-            "success": False,
-            "provider": "gemini",
-            "source_text": normalized,
-            "error": str(error),
-            "fallback_text": _mock_translate_zh_to_en(normalized),
-        }
+    started = time.perf_counter()
+    last_error_code = "GEMINI_API_ERROR"
+
+    for attempt in range(2):
+        try:
+            translated = _translate_with_gemini(normalized)
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            print(f"Gemini translation latency: {latency_ms} ms")
+            return {
+                "success": True,
+                "provider": "gemini",
+                "source_text": normalized,
+                "translated_text": translated,
+                "latency_ms": latency_ms,
+                "error": None,
+            }
+        except Exception as error:
+            last_error_code = _classify_gemini_error(error)
+            if last_error_code == "GEMINI_RATE_LIMIT" and attempt == 0:
+                time.sleep(0.5)
+                continue
+            break
+
+    latency_ms = int((time.perf_counter() - started) * 1000)
+    print(f"Gemini translation latency: {latency_ms} ms")
+    return _fallback_result(normalized, last_error_code, latency_ms)

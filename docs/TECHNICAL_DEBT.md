@@ -2,41 +2,42 @@
 
 本文档记录 TransForum AI 每个 TASK 完成时发现、遗留、解决的技术债务。
 
-## 记录规则
-
-从 Alpha 0.8 开始，每个 TASK 完成时必须检查：
-
-1. 遗留问题
-2. 临时方案
-3. 未自动化验收部分
-4. 环境依赖问题
-5. 性能风险
-
 ## 当前状态
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.1.1
+当前版本：TransForum AI Alpha 1.1.2
 
-当前债务总数：11
+当前债务总数：13
 
 ## OPEN
 
-### 2026-06-08-TASK-011A
+### 2026-06-08-TASK-012
 
-时间标签：2026-06-08-TASK-011A
+时间标签：2026-06-08-TASK-012
 
-开发版本号：TransForum AI Alpha 1.1.1
+开发版本号：TransForum AI Alpha 1.1.2
 
 新增债务：
 
-- 无
+- [DEBT-015] 类型：性能 / 真实场景风险
+  描述：Gemini 翻译延迟仍需真实会议长时间测试。
+  影响：单句翻译可返回 `latency_ms`，但长会议、连续 chunk 和弱网络下的延迟曲线仍未验证。
+  修复建议：使用 30 分钟以上真实或模拟会议语料记录 p50 / p95 / p99 延迟。
+  状态：open
+
+- [DEBT-016] 类型：翻译质量风险
+  描述：Gemini 字幕术语一致性仍需嘉宾专属词库支持。
+  影响：专有名词、机构名、人名和行业术语在长会议中可能翻译不一致。
+  修复建议：后续增加会议级术语表、嘉宾词库或 prompt 注入机制。
+  状态：open
 
 已解决债务：
 
-- [DEBT-011] Gemini API Key 需要用户本地配置：本机 `backend/.env` 已配置成功，`GEMINI_API_KEY_CONFIGURED=yes`，并通过真实 Gemini 翻译验收。
+- Gemini 真实文本翻译已接入。
+- Gemini 基础 fallback 已接入。
 
-当前债务总数：11
+当前债务总数：13
 
 ### 2026-06-08-TASK-011
 

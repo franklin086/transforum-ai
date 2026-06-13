@@ -34,6 +34,7 @@ def init_db() -> None:
                 realtime_transcript_text TEXT,
                 english_transcript_text TEXT,
                 translation_provider TEXT NOT NULL DEFAULT 'mock',
+                translation_latency_ms INTEGER NOT NULL DEFAULT 0,
                 minutes_summary TEXT,
                 minutes_key_points TEXT,
                 minutes_action_items TEXT,
@@ -80,6 +81,10 @@ def init_db() -> None:
         if "translation_provider" not in columns:
             connection.execute(
                 "ALTER TABLE meetings ADD COLUMN translation_provider TEXT NOT NULL DEFAULT 'mock'"
+            )
+        if "translation_latency_ms" not in columns:
+            connection.execute(
+                "ALTER TABLE meetings ADD COLUMN translation_latency_ms INTEGER NOT NULL DEFAULT 0"
             )
         if "minutes_summary" not in columns:
             connection.execute("ALTER TABLE meetings ADD COLUMN minutes_summary TEXT")

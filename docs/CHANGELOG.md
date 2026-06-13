@@ -2,6 +2,46 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.1.2
+
+时间标签：2026-06-08-TASK-012
+
+里程碑：Gemini Translation Quality and Latency Optimization
+
+新增：
+
+- Gemini 会议字幕风格提示词。
+- 翻译结果清洗 `remove_translation_noise(text)`。
+- Gemini 调用耗时 `latency_ms`。
+- 后端日志 `Gemini translation latency: xxx ms`。
+- Gemini 错误分类：`GEMINI_API_KEY_MISSING`、`GEMINI_RATE_LIMIT`、`GEMINI_NETWORK_ERROR`、`GEMINI_API_ERROR`。
+- 速率限制时最多重试 1 次。
+- `meetings.translation_latency_ms` 字段。
+- `backend/tests/test_translation_service.py`。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 1.1.2。
+- `/api/realtime/bilingual/{meeting_id}` 返回 `latency_ms`。
+- Meeting Console 显示 Translation 和 Latency。
+- Screen 投屏页显示 `Translation: Gemini · xxx ms`。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT、GEMINI_SETUP 更新到 Alpha 1.1.2。
+
+验收结果：
+
+- 翻译服务单元测试通过。
+- 后端 Python 编译通过。
+- 前端构建通过。
+- Gemini 真实翻译返回 provider=`gemini` 和 `latency_ms`。
+- fallback 返回 provider=`mock` 且系统不崩溃。
+- `http://localhost:3001`、会议控制台和投屏页可访问。
+
+技术债务：
+
+- 新增债务 2 项。
+- 已解决债务：Gemini 真实文本翻译与基础 fallback 已接入。
+- 当前债务总数 13 项。
+
 ## TransForum AI Alpha 1.1.1
 
 时间标签：2026-06-08-TASK-011A

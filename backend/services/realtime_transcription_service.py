@@ -97,12 +97,9 @@ def transcribe_realtime_chunk(
             timestamp = _format_chunk_timestamp(chunk_index)
             transcript_line = f"{timestamp} {text}"
             translation_result = translate_zh_to_en(text)
-            if translation_result.get("success"):
-                english_text = translation_result.get("translated_text", "")
-                translation_provider = translation_result.get("provider", "mock")
-            else:
-                english_text = translation_result.get("fallback_text", "")
-                translation_provider = "mock"
+            english_text = translation_result.get("translated_text", "")
+            translation_provider = translation_result.get("provider", "mock")
+            translation_latency_ms = int(translation_result.get("latency_ms", 0))
             english_line = f"{timestamp} {english_text}" if english_text else ""
             TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
             transcript_path = _realtime_transcript_path(meeting_id)
@@ -114,6 +111,7 @@ def transcribe_realtime_chunk(
                     meeting_id,
                     english_line,
                     translation_provider,
+                    translation_latency_ms,
                 )
         else:
             english_text = ""
@@ -122,8 +120,11 @@ def transcribe_realtime_chunk(
                 "provider": "mock",
                 "source_text": "",
                 "translated_text": "",
+                "latency_ms": 0,
+                "error": None,
             }
             translation_provider = "mock"
+            translation_latency_ms = 0
             transcript_path = _realtime_transcript_path(meeting_id)
 
         return {
@@ -131,6 +132,7 @@ def transcribe_realtime_chunk(
             "text": text,
             "english_text": english_text,
             "translation_provider": translation_provider,
+            "translation_latency_ms": translation_latency_ms,
             "translation": translation_result,
             "chunk_index": chunk_index,
             "chunk_file": str(chunk_path).replace("\\", "/"),

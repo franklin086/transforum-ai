@@ -16,6 +16,7 @@ export type Meeting = {
   realtime_transcript_text?: string | null;
   english_transcript_text?: string | null;
   translation_provider?: string | null;
+  translation_latency_ms?: number | null;
   minutes_summary?: string | null;
   minutes_key_points?: string | null;
   minutes_action_items?: string | null;
@@ -56,13 +57,14 @@ export type RealtimeTranscriptionResult =
       text: string;
       english_text?: string;
       translation_provider?: string;
+      translation_latency_ms?: number;
       translation?: {
         success: boolean;
         provider: string;
         source_text?: string;
         translated_text?: string;
         error?: string;
-        fallback_text?: string;
+        latency_ms?: number;
       };
       chunk_index: number;
       chunk_file?: string;
@@ -90,6 +92,7 @@ export type RealtimeBilingualResult = {
   chinese: string;
   english: string;
   provider?: string;
+  latency_ms?: number;
   updated_at: string;
 };
 

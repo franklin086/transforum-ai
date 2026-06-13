@@ -17,7 +17,7 @@ function Write-Check {
     }
 }
 
-Write-Host "TransForum AI Alpha 1.1.1 Environment Check"
+Write-Host "TransForum AI Alpha 1.1.2 Environment Check"
 Write-Host "Project root expected: $ExpectedRoot"
 Write-Host ""
 

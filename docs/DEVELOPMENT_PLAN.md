@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.1.1
+当前版本：TransForum AI Alpha 1.1.2
 
-当前里程碑：Gemini API Key Local Verification
+当前里程碑：Gemini Translation Quality and Latency Optimization
 
 当前项目根目录：
 
@@ -29,19 +29,22 @@ D:\transforum-ai
 - Alpha 1.0.1：演示稳定性检查与启动流程优化
 - Alpha 1.1：Gemini 真实文本翻译接入
 - Alpha 1.1.1：Gemini API Key 本机配置与真实翻译验收通过
+- Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
 
-## Alpha 1.1 范围
+## Alpha 1.1.2 范围
 
-目标：把实时中英双语字幕中的英文字幕从 Mock 翻译升级为 Gemini 文本翻译。
+目标：让 Gemini 英文字幕更像真实会议同传字幕，并提升失败可控性。
 
 本阶段只做：
 
-- Gemini API Key 配置
-- Gemini 文本翻译服务
-- Mock fallback
-- Translation Provider 显示
-- Gemini 接入文档
-- 技术债务更新
+- Gemini 会议字幕风格提示词
+- 翻译结果清洗
+- Gemini 延迟记录
+- Gemini 错误分类
+- 速率限制一次重试
+- Mock Fallback 优化
+- 翻译服务测试用例
+- 前端 provider 和 latency 显示
 
 本阶段不做：
 
@@ -55,6 +58,6 @@ D:\transforum-ai
 ## 下一阶段建议
 
 - WebSocket 或 Server-Sent Events 推送字幕。
-- Gemini 翻译质量专项测试和 prompt 优化。
-- 增加会议历史管理页面。
+- Gemini 术语一致性和嘉宾词库专项。
+- 真实会议长时间延迟测试。
 - 增加 DOCX 导出。

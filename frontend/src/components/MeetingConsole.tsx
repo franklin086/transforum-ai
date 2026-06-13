@@ -58,6 +58,7 @@ export function MeetingConsole() {
   const [latestRealtimeText, setLatestRealtimeText] = useState("");
   const [currentTranslation, setCurrentTranslation] = useState("");
   const [translationProvider, setTranslationProvider] = useState("Mock Fallback");
+  const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
   const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
@@ -93,6 +94,7 @@ export function MeetingConsole() {
             ? "Gemini"
             : "Mock Fallback"
         );
+        setTranslationLatencyMs(result.meeting.translation_latency_ms ?? 0);
         setError(null);
       })
       .catch(() => {
@@ -210,6 +212,7 @@ export function MeetingConsole() {
         setTranslationProvider(
           result.translation_provider === "gemini" ? "Gemini" : "Mock Fallback"
         );
+        setTranslationLatencyMs(result.translation_latency_ms ?? 0);
         setRealtimeTranscript((current) =>
           current ? `${current}\n${line}` : line
         );
@@ -601,6 +604,9 @@ export function MeetingConsole() {
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Translation: {translationProvider}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Latency: {translationLatencyMs} ms
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

@@ -1046,6 +1046,79 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.2：WebSocket 字幕推送或 Gemini 翻译质量专项优化。
 
+## 2026-06-08-TASK-012
+
+任务编号：TASK 012
+
+时间标签：2026-06-08-TASK-012
+
+开发版本：TransForum AI Alpha 1.1.2
+
+任务名称：Gemini 翻译质量与延迟优化
+
+修改文件：
+
+- README.md
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/main.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- backend/tests/test_translation_service.py
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/GEMINI_SETUP.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/types/meeting.ts
+- scripts/check_environment.ps1
+- scripts/demo_checklist.md
+
+完成内容：
+
+- Gemini prompt 优化为专业会议同传字幕风格。
+- 新增 `remove_translation_noise(text)` 清洗 Translation、English、引号、Markdown 和多余换行。
+- 新增 Gemini 调用耗时 `latency_ms`。
+- 后端日志输出 `Gemini translation latency: xxx ms`。
+- 新增错误码：`GEMINI_API_KEY_MISSING`、`GEMINI_RATE_LIMIT`、`GEMINI_NETWORK_ERROR`、`GEMINI_API_ERROR`。
+- 速率限制时最多重试 1 次，间隔 0.5 秒。
+- Gemini 失败时自动 Mock Fallback，中文字幕链路不受影响。
+- `GET /api/realtime/bilingual/{meeting_id}` 返回 `latency_ms`。
+- Meeting Console 显示 Translation 和 Latency。
+- Screen 投屏页显示 `Translation: Gemini · xxx ms`。
+- 新增翻译服务单元测试。
+
+完成状态：本地后端、翻译服务、fallback、前端构建和 3001 页面验收通过，真实麦克风浏览器联动仍需人工确认。
+
+验收状态：
+
+- `python -m unittest tests.test_translation_service` 通过。
+- `python -m compileall .` 通过。
+- Gemini 真实翻译返回 provider=`gemini` 和 `latency_ms`。
+- fallback 返回 provider=`mock` 且系统不崩溃。
+- `/api/health` 返回 `Alpha 1.1.2`。
+- 前端 `npm run build` 通过。
+- `http://localhost:3001`、会议控制台和投屏页可访问。
+
+开发债务检查结果：
+
+- 新增债务：2 项。
+- 已解决债务：Gemini 真实文本翻译与基础 fallback 已接入。
+- 当前债务总数：13 项。
+
+下一阶段建议：
+
+- Alpha 1.2：WebSocket 字幕推送或 Gemini 术语一致性专项优化。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

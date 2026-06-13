@@ -1,4 +1,4 @@
-# TransForum AI Alpha 1.1 Demo Checklist
+# TransForum AI Alpha 1.1.1 Demo Checklist
 
 ## 演示前检查
 
@@ -9,7 +9,7 @@
 - 后端启动
 - 前端启动
 - 浏览器可访问
-- `/api/health` 返回 Alpha 1.1
+- `/api/health` 返回 Alpha 1.1.1
 
 ## 演示流程
 

@@ -4,9 +4,9 @@
 
 项目名称：TransForum AI
 
-当前开发版本号：TransForum AI Alpha 1.1
+当前开发版本号：TransForum AI Alpha 1.1.1
 
-当前里程碑：Gemini Text Translation Integration
+当前里程碑：Gemini API Key Local Verification
 
 当前项目根目录：
 
@@ -16,31 +16,25 @@ D:\transforum-ai
 
 ## 当前阶段
 
-Alpha 1.1 将实时中英双语字幕中的英文字幕从 Mock 翻译升级为 Gemini 文本翻译。
+Alpha 1.1.1 验证本机 Gemini API Key 已正确接入 TransForum AI。
 
-本阶段不接入 Gemini Live API，不开发 AI 语音播报、WebSocket、DOCX 导出或用户系统。
+本阶段不开发新功能，只确认 `backend/.env` 中的 `GEMINI_API_KEY` 可被后端读取，并确认 `translation_service.translate_zh_to_en` 可以返回真实 Gemini 英文翻译。
 
 ## 当前已完成能力
 
-- 创建会议
-- 实时中文字幕
-- 中英双语投屏
-- 会议归档
-- Rule Based 会议纪要
-- 演示启动脚本
-- Gemini API Key 读取：`GEMINI_API_KEY`
-- Gemini 翻译模型读取：`GEMINI_TRANSLATION_MODEL`
-- 使用 `google-genai` 调用 Gemini 文本翻译
-- 未配置 API Key 或 Gemini 调用失败时自动 fallback 到 Mock
-- Meeting Console 显示 Translation Provider
-- Screen 投屏页显示 Translation: Gemini / Mock
-- `GET /api/realtime/bilingual/{meeting_id}` 返回 `provider`
-- 新增 `docs/GEMINI_SETUP.md`
+- 本机 `GEMINI_API_KEY` 已配置成功。
+- `GEMINI_API_KEY_CONFIGURED=yes` 验收通过，未输出 Key 明文。
+- Gemini 翻译模型为 `gemini-3.5-flash`。
+- 测试中文：大家好，欢迎参加 TransForum AI 测试会议。
+- Gemini 英文翻译返回自然英文。
+- 翻译模式从 Mock Fallback 验证切换为 Gemini。
+- Meeting Console 文案显示 `Translation: Gemini / Mock Fallback`。
+- Screen 投屏页显示 `Translation: Gemini / Mock`。
+- `backend/.env` 仍为本地文件，不进入 Git 提交。
 
 ## 当前限制
 
-- Gemini API Key 需要用户本地配置。
-- Gemini 翻译质量仍需真实会议语料测试。
+- Gemini 翻译质量仍需更多真实会议语料测试。
 - Gemini Live API 暂未接入。
 - Gemini 调用延迟可能影响实时字幕体验。
 - 投屏刷新仍为 2 秒轮询，后续可升级 WebSocket。
@@ -49,14 +43,14 @@ Alpha 1.1 将实时中英双语字幕中的英文字幕从 Mock 翻译升级为 
 
 ## 当前最新任务记录
 
-时间标签：2026-06-08-TASK-011
+时间标签：2026-06-08-TASK-011A
 
-开发版本号：TransForum AI Alpha 1.1
+开发版本号：TransForum AI Alpha 1.1.1
 
-任务名称：Gemini 文本翻译接入
+任务名称：Gemini API Key 本机接入验证
 
-完成状态：代码与文档更新完成，等待本地验收、提交和标签。
+完成状态：Gemini API Key 本机配置成功，真实翻译验收通过。
 
 下一阶段建议：
 
-- Alpha 1.2：WebSocket 实时推送或 Gemini 翻译质量专项优化。
+- Alpha 1.2：WebSocket 字幕推送或 Gemini 翻译质量专项优化。

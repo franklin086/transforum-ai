@@ -16,29 +16,33 @@
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.1
+当前版本：TransForum AI Alpha 1.1.1
 
-当前债务总数：12
+当前债务总数：11
 
 ## OPEN
 
-### 2026-06-08-TASK-011
+### 2026-06-08-TASK-011A
 
-时间标签：2026-06-08-TASK-011
+时间标签：2026-06-08-TASK-011A
 
-开发版本号：TransForum AI Alpha 1.1
+开发版本号：TransForum AI Alpha 1.1.1
 
 新增债务：
 
-- [DEBT-011] 类型：环境依赖问题
-  描述：Gemini API Key 需要用户本地配置。
-  影响：未配置 `GEMINI_API_KEY` 时系统只能使用 Mock Fallback。
-  修复建议：在演示电脑 `backend/.env` 中配置真实 key，并在演示前确认 Translation Provider 显示 Gemini。
-  状态：open
+- 无
+
+已解决债务：
+
+- [DEBT-011] Gemini API Key 需要用户本地配置：本机 `backend/.env` 已配置成功，`GEMINI_API_KEY_CONFIGURED=yes`，并通过真实 Gemini 翻译验收。
+
+当前债务总数：11
+
+### 2026-06-08-TASK-011
 
 - [DEBT-012] 类型：质量风险
-  描述：Gemini 翻译质量需要真实会议语料测试。
-  影响：通用 prompt 已可用，但专业场景、长句和术语翻译质量仍未充分验证。
+  描述：Gemini 翻译质量需要更多真实会议语料测试。
+  影响：本机单句测试已通过，但专业场景、长句和术语翻译质量仍未充分验证。
   修复建议：收集真实会议中文字幕样本，建立人工验收清单并迭代 prompt。
   状态：open
 
@@ -53,13 +57,6 @@
   影响：网络延迟或 API 响应慢时，英文字幕可能滞后于中文字幕。
   修复建议：后续增加异步队列、超时配置、缓存和延迟监控。
   状态：open
-
-已解决债务：
-
-- [DEBT-001] 未配置 Gemini API Key 时只能使用 Mock 翻译：Alpha 1.1 已接入真实 Gemini 文本翻译，并保留 Mock Fallback。
-- [DEBT-006] Alpha 1.0 未接入真实 Gemini 翻译：Alpha 1.1 已接入 Gemini 文本翻译服务。
-
-当前债务总数：12
 
 ### 2026-06-08-TASK-010
 
@@ -121,3 +118,4 @@
 
 - [DEBT-001] 关闭于 2026-06-08-TASK-011：Gemini 文本翻译已接入，未配置 key 时保留 Mock Fallback。
 - [DEBT-006] 关闭于 2026-06-08-TASK-011：Alpha 1.1 已接入真实 Gemini 文本翻译服务。
+- [DEBT-011] 关闭于 2026-06-08-TASK-011A：本机 Gemini API Key 已配置成功，真实 Gemini 翻译验收通过。

@@ -94,7 +94,7 @@ function ScreenContent() {
               TransForum AI Live Caption
             </h1>
             <p className="mt-2 text-sm font-semibold uppercase tracking-[0.24em] text-blue-200">
-              Alpha 1.1 Demo Mode
+              Alpha 1.1.1 Demo Mode
             </p>
             <p className="mt-3 text-lg text-blue-100 md:text-2xl">
               {meetingName || meetingId || "No meeting selected"}

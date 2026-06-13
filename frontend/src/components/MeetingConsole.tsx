@@ -600,7 +600,7 @@ export function MeetingConsole() {
               Current Translation: {currentTranslation || "No English subtitle yet."}
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-700">
-              Translation Provider: {translationProvider}
+              Translation: {translationProvider}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

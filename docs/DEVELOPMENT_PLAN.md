@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.1
+当前版本：TransForum AI Alpha 1.1.1
 
-当前里程碑：Gemini Text Translation Integration
+当前里程碑：Gemini API Key Local Verification
 
 当前项目根目录：
 
@@ -28,6 +28,7 @@ D:\transforum-ai
 - Alpha 1.0：First Real Meeting Demo 可演示
 - Alpha 1.0.1：演示稳定性检查与启动流程优化
 - Alpha 1.1：Gemini 真实文本翻译接入
+- Alpha 1.1.1：Gemini API Key 本机配置与真实翻译验收通过
 
 ## Alpha 1.1 范围
 

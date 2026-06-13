@@ -988,6 +988,64 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.2：WebSocket 字幕推送或 Gemini 翻译质量专项优化。
 
+## 2026-06-08-TASK-011A
+
+任务编号：TASK 011A
+
+时间标签：2026-06-08-TASK-011A
+
+开发版本：TransForum AI Alpha 1.1.1
+
+任务名称：Gemini API Key 本机接入验证
+
+修改文件：
+
+- README.md
+- backend/main.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/TECHNICAL_DEBT.md
+- scripts/check_environment.ps1
+- scripts/demo_checklist.md
+
+完成内容：
+
+- 验证本机 `GEMINI_API_KEY_CONFIGURED=yes`，未输出 Key 明文。
+- 调用 `translation_service.translate_zh_to_en` 验证 Gemini 真实翻译可用。
+- 测试中文：大家好，欢迎参加 TransForum AI 测试会议。
+- 英文翻译结果：Hello everyone, welcome to the TransForum AI test meeting.
+- 翻译模式确认从 Mock Fallback 切换为 Gemini。
+- Meeting Console 文案调整为 `Translation: Gemini / Mock Fallback`。
+- `/api/health` 版本更新为 Alpha 1.1.1。
+- 首页、前端 metadata、投屏页 Demo Mode 和演示清单同步 Alpha 1.1.1。
+- 确认 `backend/.env` 不进入 Git 提交列表。
+
+完成状态：Gemini API Key 本机配置成功，真实翻译验收通过。
+
+验收状态：
+
+- `GEMINI_API_KEY_CONFIGURED=yes`。
+- `provider=gemini`。
+- 翻译结果为自然英文。
+- `backend/.env` 未被 Git 跟踪。
+
+开发债务检查结果：
+
+- 新增债务：0 项。
+- 已解决债务：1 项，`DEBT-011`。
+- 当前债务总数：11 项。
+
+下一阶段建议：
+
+- Alpha 1.2：WebSocket 字幕推送或 Gemini 翻译质量专项优化。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

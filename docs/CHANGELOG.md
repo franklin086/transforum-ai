@@ -2,6 +2,37 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.1.1
+
+时间标签：2026-06-08-TASK-011A
+
+里程碑：Gemini API Key Local Verification
+
+新增记录：
+
+- Gemini API Key 本机配置成功。
+- Gemini 真实文本翻译验收通过。
+- Meeting Console 文案调整为 `Translation: Gemini / Mock Fallback`。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 1.1.1。
+- 首页、前端 metadata 和投屏页 Demo Mode 标识更新为 Alpha 1.1.1。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、TECHNICAL_DEBT 更新到 Alpha 1.1.1。
+
+验收结果：
+
+- `GEMINI_API_KEY_CONFIGURED=yes`。
+- `translate_zh_to_en` 返回 provider=`gemini`。
+- 测试中文成功翻译为自然英文。
+- `backend/.env` 未进入 Git 提交列表。
+
+技术债务：
+
+- 新增债务 0 项。
+- 已解决债务 1 项：`DEBT-011`。
+- 当前债务总数 11 项。
+
 ## TransForum AI Alpha 1.1
 
 时间标签：2026-06-08-TASK-011

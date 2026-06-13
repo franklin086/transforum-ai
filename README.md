@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.0.1
+当前版本：TransForum AI Alpha 1.1
 
 当前项目根目录：
 
@@ -202,10 +202,15 @@ http://localhost:8000/api/health
 - 投屏页每 2 秒自动刷新实时字幕
 - 会议控制台可打开当前会议投屏页
 - 实时中文识别后自动生成英文字幕
+- Gemini 文本翻译优先生成英文字幕
+- Gemini 未配置或调用失败时自动 Mock Fallback
 - SQLite 保存 `english_transcript_text`
+- SQLite 保存 `translation_provider`
 - `/api/realtime/bilingual/{meeting_id}` 返回中英双语字幕
 - 投屏页同步显示中文与 English 字幕
 - 会议控制台显示 Current Translation
+- 会议控制台显示 Translation Provider
+- 投屏页显示 Translation: Gemini / Mock
 - 结束会议并归档到 `meeting_archive`
 - Rule Based 会议纪要生成
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
@@ -214,6 +219,7 @@ http://localhost:8000/api/health
 - Alpha 1.0.1 Demo Guide 已更新
 - Alpha 1.0.1 演示前环境检查脚本已新增
 - Alpha 1.0.1 前后端启动脚本已新增
+- Gemini API Setup 文档已新增
 
 ## 当前 API
 
@@ -227,7 +233,7 @@ http://localhost:8000/api/health
 - `GET /api/transcription/model-status`
 - `POST /api/realtime/transcribe-chunk`
 - `GET /api/realtime/transcript/{meeting_id}`
-- `GET /api/realtime/bilingual/{meeting_id}`
+- `GET /api/realtime/bilingual/{meeting_id}`，返回 `provider`
 - `POST /api/minutes/generate`
 - `POST /api/meeting/start`
 - `POST /api/meeting/end`
@@ -308,6 +314,35 @@ Systran/faster-whisper-tiny
 docs/WHISPER_MODEL_SETUP.md
 ```
 
+## Gemini 文本翻译配置
+
+Alpha 1.1 使用 Gemini 文本翻译生成英文字幕。
+
+配置模板：
+
+```text
+backend/.env.example
+```
+
+本地配置：
+
+```text
+backend/.env
+```
+
+示例：
+
+```text
+GEMINI_API_KEY=你的key
+GEMINI_TRANSLATION_MODEL=gemini-3.5-flash
+```
+
+不要提交真实 API Key。详细说明见：
+
+```text
+docs/GEMINI_SETUP.md
+```
+
 ## Alpha 0.5.1 办公电脑 UAT
 
 时间标签：2026-06-08-TASK-005B-UAT
@@ -351,7 +386,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.0.1
+TransForum AI Alpha 1.1
 ```
 
 版本规则：
@@ -371,6 +406,7 @@ TransForum AI Alpha 1.0.1
 - Alpha 0.9：会议存档与会后内容整理可用
 - Alpha 1.0：First Real Meeting Demo 可演示
 - Alpha 1.0.1：演示稳定性检查与启动流程优化
+- Alpha 1.1：Gemini 真实文本翻译接入
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

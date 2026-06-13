@@ -15,6 +15,7 @@ export type Meeting = {
   transcript_text?: string | null;
   realtime_transcript_text?: string | null;
   english_transcript_text?: string | null;
+  translation_provider?: string | null;
   minutes_summary?: string | null;
   minutes_key_points?: string | null;
   minutes_action_items?: string | null;
@@ -54,6 +55,15 @@ export type RealtimeTranscriptionResult =
       success: true;
       text: string;
       english_text?: string;
+      translation_provider?: string;
+      translation?: {
+        success: boolean;
+        provider: string;
+        source_text?: string;
+        translated_text?: string;
+        error?: string;
+        fallback_text?: string;
+      };
       chunk_index: number;
       chunk_file?: string;
       transcript_file?: string;
@@ -79,6 +89,7 @@ export type RealtimeBilingualResult = {
   meeting_id: string;
   chinese: string;
   english: string;
+  provider?: string;
   updated_at: string;
 };
 

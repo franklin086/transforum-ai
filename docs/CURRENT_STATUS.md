@@ -4,9 +4,9 @@
 
 项目名称：TransForum AI
 
-当前开发版本号：TransForum AI Alpha 1.0.1
+当前开发版本号：TransForum AI Alpha 1.1
 
-当前里程碑：First Real Meeting Demo Startup Stability
+当前里程碑：Gemini Text Translation Integration
 
 当前项目根目录：
 
@@ -16,40 +16,47 @@ D:\transforum-ai
 
 ## 当前阶段
 
-Alpha 1.0.1 是演示稳定性检查与启动流程优化版本。
+Alpha 1.1 将实时中英双语字幕中的英文字幕从 Mock 翻译升级为 Gemini 文本翻译。
 
-本阶段不新增业务功能，只确保一台电脑、一个麦克风、一个投影仪可以用最少步骤启动并完成 First Real Meeting Demo。
+本阶段不接入 Gemini Live API，不开发 AI 语音播报、WebSocket、DOCX 导出或用户系统。
 
 ## 当前已完成能力
 
-- Alpha 1.0 First Real Meeting Demo 闭环保留：创建会议、实时字幕、双语投屏、结束会议、生成会议纪要。
-- 首页显示 `TransForum AI Alpha 1.0.1`。
-- 投屏页显示 `Alpha 1.0.1 Demo Mode`。
-- 后端 `/api/health` 返回 `Alpha 1.0.1`。
-- 新增 `scripts/check_environment.ps1` 环境检查脚本。
-- 新增 `scripts/start_backend.ps1` 后端启动脚本。
-- 新增 `scripts/start_frontend.ps1` 前端启动脚本。
-- 新增 `scripts/demo_checklist.md` 演示前检查清单。
-- README 和 Alpha 1 Demo Guide 已补充脚本化启动流程。
+- 创建会议
+- 实时中文字幕
+- 中英双语投屏
+- 会议归档
+- Rule Based 会议纪要
+- 演示启动脚本
+- Gemini API Key 读取：`GEMINI_API_KEY`
+- Gemini 翻译模型读取：`GEMINI_TRANSLATION_MODEL`
+- 使用 `google-genai` 调用 Gemini 文本翻译
+- 未配置 API Key 或 Gemini 调用失败时自动 fallback 到 Mock
+- Meeting Console 显示 Translation Provider
+- Screen 投屏页显示 Translation: Gemini / Mock
+- `GET /api/realtime/bilingual/{meeting_id}` 返回 `provider`
+- 新增 `docs/GEMINI_SETUP.md`
 
 ## 当前限制
 
-- 英文翻译仍为 Mock 或基础翻译，后续接 Gemini。
+- Gemini API Key 需要用户本地配置。
+- Gemini 翻译质量仍需真实会议语料测试。
+- Gemini Live API 暂未接入。
+- Gemini 调用延迟可能影响实时字幕体验。
 - 投屏刷新仍为 2 秒轮询，后续可升级 WebSocket。
 - DOCX 导出仍未实现。
 - 会议历史管理页面仍未实现。
-- 新增 PowerShell 启动脚本仍需在不同 Windows 环境反复测试。
 
 ## 当前最新任务记录
 
-时间标签：2026-06-08-TASK-010
+时间标签：2026-06-08-TASK-011
 
-开发版本号：TransForum AI Alpha 1.0.1
+开发版本号：TransForum AI Alpha 1.1
 
-任务名称：演示稳定性检查与启动流程优化
+任务名称：Gemini 文本翻译接入
 
 完成状态：代码与文档更新完成，等待本地验收、提交和标签。
 
 下一阶段建议：
 
-- Alpha 1.1：真实 Gemini 翻译、WebSocket 推送、会议历史管理页面和 DOCX 导出。
+- Alpha 1.2：WebSocket 实时推送或 Gemini 翻译质量专项优化。

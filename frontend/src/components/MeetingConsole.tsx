@@ -57,6 +57,7 @@ export function MeetingConsole() {
   const [currentRealtimeChunk, setCurrentRealtimeChunk] = useState(0);
   const [latestRealtimeText, setLatestRealtimeText] = useState("");
   const [currentTranslation, setCurrentTranslation] = useState("");
+  const [translationProvider, setTranslationProvider] = useState("Mock Fallback");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
   const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
@@ -86,6 +87,11 @@ export function MeetingConsole() {
         setRealtimeTranscript(result.meeting.realtime_transcript_text ?? "");
         setCurrentTranslation(
           latestLineWithoutTimestamp(result.meeting.english_transcript_text)
+        );
+        setTranslationProvider(
+          result.meeting.translation_provider === "gemini"
+            ? "Gemini"
+            : "Mock Fallback"
         );
         setError(null);
       })
@@ -201,6 +207,9 @@ export function MeetingConsole() {
         const line = `${formatRealtimeTimestamp(result.chunk_index)} ${text}`;
         setLatestRealtimeText(text);
         setCurrentTranslation(result.english_text?.trim() ?? "");
+        setTranslationProvider(
+          result.translation_provider === "gemini" ? "Gemini" : "Mock Fallback"
+        );
         setRealtimeTranscript((current) =>
           current ? `${current}\n${line}` : line
         );
@@ -589,6 +598,9 @@ export function MeetingConsole() {
             </p>
             <p className="mt-2 text-sm text-slate-600">
               Current Translation: {currentTranslation || "No English subtitle yet."}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              Translation Provider: {translationProvider}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

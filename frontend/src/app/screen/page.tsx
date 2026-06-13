@@ -18,6 +18,7 @@ function ScreenContent() {
   const [meetingName, setMeetingName] = useState("");
   const [chineseCaption, setChineseCaption] = useState("");
   const [englishCaption, setEnglishCaption] = useState("");
+  const [translationProvider, setTranslationProvider] = useState("Mock");
   const [updatedAt, setUpdatedAt] = useState("");
   const [status, setStatus] = useState("Waiting for meeting");
   const recentLines = useMemo(
@@ -56,6 +57,7 @@ function ScreenContent() {
         }
         setChineseCaption(result.chinese);
         setEnglishCaption(result.english);
+        setTranslationProvider(result.provider === "gemini" ? "Gemini" : "Mock");
         setUpdatedAt(result.updated_at ?? "");
         setStatus(result.chinese || result.english ? "Live" : "No bilingual subtitles yet");
       } catch {
@@ -92,10 +94,13 @@ function ScreenContent() {
               TransForum AI Live Caption
             </h1>
             <p className="mt-2 text-sm font-semibold uppercase tracking-[0.24em] text-blue-200">
-              Alpha 1.0.1 Demo Mode
+              Alpha 1.1 Demo Mode
             </p>
             <p className="mt-3 text-lg text-blue-100 md:text-2xl">
               {meetingName || meetingId || "No meeting selected"}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-blue-100/80">
+              Translation: {translationProvider}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

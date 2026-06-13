@@ -96,7 +96,13 @@ def transcribe_realtime_chunk(
         if text:
             timestamp = _format_chunk_timestamp(chunk_index)
             transcript_line = f"{timestamp} {text}"
-            english_text = translate_zh_to_en(text)
+            translation_result = translate_zh_to_en(text)
+            if translation_result.get("success"):
+                english_text = translation_result.get("translated_text", "")
+                translation_provider = translation_result.get("provider", "mock")
+            else:
+                english_text = translation_result.get("fallback_text", "")
+                translation_provider = "mock"
             english_line = f"{timestamp} {english_text}" if english_text else ""
             TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
             transcript_path = _realtime_transcript_path(meeting_id)
@@ -104,15 +110,28 @@ def transcribe_realtime_chunk(
                 output.write(f"{transcript_line}\n")
             append_realtime_transcript(meeting_id, transcript_line)
             if english_line:
-                append_english_transcript(meeting_id, english_line)
+                append_english_transcript(
+                    meeting_id,
+                    english_line,
+                    translation_provider,
+                )
         else:
             english_text = ""
+            translation_result = {
+                "success": True,
+                "provider": "mock",
+                "source_text": "",
+                "translated_text": "",
+            }
+            translation_provider = "mock"
             transcript_path = _realtime_transcript_path(meeting_id)
 
         return {
             "success": True,
             "text": text,
             "english_text": english_text,
+            "translation_provider": translation_provider,
+            "translation": translation_result,
             "chunk_index": chunk_index,
             "chunk_file": str(chunk_path).replace("\\", "/"),
             "transcript_file": str(transcript_path).replace("\\", "/"),

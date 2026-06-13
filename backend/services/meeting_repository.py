@@ -21,6 +21,7 @@ def _row_to_meeting(row) -> Meeting:
         transcript_text=row["transcript_text"],
         realtime_transcript_text=row["realtime_transcript_text"],
         english_transcript_text=row["english_transcript_text"],
+        translation_provider=row["translation_provider"],
         minutes_summary=row["minutes_summary"],
         minutes_key_points=row["minutes_key_points"],
         minutes_action_items=row["minutes_action_items"],
@@ -58,13 +59,14 @@ def create_meeting(request: MeetingCreateRequest) -> Meeting:
                 transcript_text,
                 realtime_transcript_text,
                 english_transcript_text,
+                translation_provider,
                 minutes_summary,
                 minutes_key_points,
                 minutes_action_items,
                 minutes_next_steps,
                 transcript_status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 meeting.id,
@@ -81,6 +83,7 @@ def create_meeting(request: MeetingCreateRequest) -> Meeting:
                 meeting.transcript_text,
                 meeting.realtime_transcript_text,
                 meeting.english_transcript_text,
+                meeting.translation_provider,
                 meeting.minutes_summary,
                 meeting.minutes_key_points,
                 meeting.minutes_action_items,
@@ -98,7 +101,7 @@ def get_meeting(meeting_id: str) -> Meeting | None:
     with get_connection() as connection:
         row = connection.execute(
             """
-            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
+            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
             FROM meetings
             WHERE id = ?
             """,
@@ -116,7 +119,7 @@ def list_recent_meetings(limit: int = 50) -> list[Meeting]:
     with get_connection() as connection:
         rows = connection.execute(
             """
-            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
+            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
             FROM meetings
             ORDER BY created_at DESC
             LIMIT ?
@@ -202,7 +205,9 @@ def append_realtime_transcript(meeting_id: str, text: str) -> Meeting | None:
     return get_meeting(meeting_id)
 
 
-def append_english_transcript(meeting_id: str, text: str) -> Meeting | None:
+def append_english_transcript(
+    meeting_id: str, text: str, provider: str = "mock"
+) -> Meeting | None:
     init_db()
     current = get_meeting(meeting_id)
     if current is None:
@@ -215,10 +220,11 @@ def append_english_transcript(meeting_id: str, text: str) -> Meeting | None:
         connection.execute(
             """
             UPDATE meetings
-            SET english_transcript_text = ?
+            SET english_transcript_text = ?,
+                translation_provider = ?
             WHERE id = ?
             """,
-            (next_text, meeting_id),
+            (next_text, provider, meeting_id),
         )
         connection.commit()
 

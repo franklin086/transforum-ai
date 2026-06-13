@@ -1,10 +1,10 @@
-# TransForum AI Alpha 1.0.1 Demo Guide
+# TransForum AI Alpha 1.1 Demo Guide
 
 ## 演示目标
 
 一个人、一台电脑、一个麦克风、一台投影仪，5 分钟内启动一场中英双语 AI 同传会议，并生成会议纪要。
 
-Alpha 1.0.1 的重点不是新增功能，而是让 Alpha 1.0 First Real Meeting Demo 更容易检查、启动和复现。
+Alpha 1.1 在 Alpha 1.0 First Real Meeting Demo 的基础上接入 Gemini 文本翻译，并继续保留演示启动检查流程。
 
 ## 演示前环境检查
 
@@ -42,7 +42,7 @@ http://localhost:8000
 {
   "status": "ok",
   "project": "TransForum AI",
-  "version": "Alpha 1.0.1"
+  "version": "Alpha 1.1"
 }
 ```
 
@@ -104,3 +104,4 @@ scripts\demo_checklist.md
 - Whisper tiny 模型适合演示，不适合正式高精度会议。
 - 投屏刷新仍为轮询，后续可升级 WebSocket。
 - 新增启动脚本仍需在不同 Windows 环境反复测试。
+- Gemini API Key 需要在演示电脑本地配置；未配置时会显示 Mock Fallback。

@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.0.1
+当前版本：TransForum AI Alpha 1.1
 
-当前里程碑：First Real Meeting Demo Startup Stability
+当前里程碑：Gemini Text Translation Integration
 
 当前项目根目录：
 
@@ -27,32 +27,33 @@ D:\transforum-ai
 - Alpha 0.9：会议存档与 Rule Based 会议纪要可用
 - Alpha 1.0：First Real Meeting Demo 可演示
 - Alpha 1.0.1：演示稳定性检查与启动流程优化
+- Alpha 1.1：Gemini 真实文本翻译接入
 
-## Alpha 1.0.1 范围
+## Alpha 1.1 范围
 
-目标：让 Alpha 1.0 演示闭环更容易启动、更容易检查、更少依赖临场手工排错。
+目标：把实时中英双语字幕中的英文字幕从 Mock 翻译升级为 Gemini 文本翻译。
 
 本阶段只做：
 
-- 环境检查脚本
-- 后端启动脚本
-- 前端启动脚本
-- 演示 checklist
-- README 和 Demo Guide 启动说明优化
-- `/api/health` 与首页版本更新
+- Gemini API Key 配置
+- Gemini 文本翻译服务
+- Mock fallback
+- Translation Provider 显示
+- Gemini 接入文档
 - 技术债务更新
 
-## 演示流程
+本阶段不做：
 
-1. Create Meeting
-2. Start Realtime Caption
-3. Open Screen Mode
-4. End Meeting & Generate Minutes
-5. View Meeting Minutes
+- Gemini Live API
+- AI 语音播报
+- WebSocket
+- DOCX 导出
+- 手机扫码
+- 用户系统
 
 ## 下一阶段建议
 
-- 接入真实 Gemini 翻译。
-- 将投屏刷新从轮询升级到 WebSocket 或 Server-Sent Events。
+- WebSocket 或 Server-Sent Events 推送字幕。
+- Gemini 翻译质量专项测试和 prompt 优化。
 - 增加会议历史管理页面。
 - 增加 DOCX 导出。

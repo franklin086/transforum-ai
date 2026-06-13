@@ -74,5 +74,6 @@ def get_bilingual_realtime_transcript(meeting_id: str):
         "meeting_id": meeting_id,
         "chinese": chinese,
         "english": english,
+        "provider": meeting.translation_provider or "mock",
         "updated_at": datetime.utcnow().replace(microsecond=0).isoformat(),
     }

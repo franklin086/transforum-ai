@@ -913,6 +913,81 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.1：真实 Gemini 翻译、WebSocket 推送、会议历史管理页面和 DOCX 导出。
 
+## 2026-06-08-TASK-011
+
+任务编号：TASK 011
+
+时间标签：2026-06-08-TASK-011
+
+开发版本：TransForum AI Alpha 1.1
+
+任务名称：Gemini 文本翻译接入
+
+修改文件：
+
+- .gitignore
+- README.md
+- backend/.env.example
+- backend/config.py
+- backend/main.py
+- backend/requirements.txt
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/models/meeting.py
+- backend/services/meeting_repository.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/types/meeting.ts
+- docs/GEMINI_SETUP.md
+- docs/ALPHA_1_DEMO_GUIDE.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+- scripts/check_environment.ps1
+- scripts/demo_checklist.md
+
+完成内容：
+
+- 使用 `google-genai` 接入 Gemini 文本翻译。
+- 新增 `GEMINI_API_KEY` 和 `GEMINI_TRANSLATION_MODEL` 配置读取。
+- 未配置 API Key 时保留 Mock Fallback。
+- Gemini API 调用失败时自动 fallback 到 Mock，不影响中文字幕链路。
+- 实时字幕链路写入英文字幕时保存 `translation_provider`。
+- `/api/realtime/bilingual/{meeting_id}` 返回 `provider`。
+- Meeting Console 显示 Translation Provider。
+- Screen 投屏页显示 Translation: Gemini / Mock。
+- 新增 Gemini 接入文档 `docs/GEMINI_SETUP.md`。
+- `backend/.env` 从 Git 跟踪中移除，避免提交真实 API Key。
+- `/api/health` 版本更新为 Alpha 1.1。
+- Alpha Demo Guide 和 Demo Checklist 同步 Alpha 1.1 验收版本。
+
+完成状态：代码与文档更新完成，真实 Gemini 模式需本地配置 API Key 后人工验收。
+
+验收状态：
+
+- 无 API Key 场景：provider=`mock`，系统不崩溃。
+- 有 API Key 场景：provider 应为 `gemini`。
+- 前端 `npm run build` 需通过。
+- 后端 `/api/health` 需返回 `Alpha 1.1`。
+
+开发债务检查结果：
+
+- 新增债务：4 项。
+- 已解决债务：2 项。
+- 当前债务总数：12 项。
+
+下一阶段建议：
+
+- Alpha 1.2：WebSocket 字幕推送或 Gemini 翻译质量专项优化。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

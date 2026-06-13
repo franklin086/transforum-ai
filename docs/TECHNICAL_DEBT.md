@@ -16,19 +16,52 @@
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.0.1
+当前版本：TransForum AI Alpha 1.1
 
-当前债务总数：10
+当前债务总数：12
 
 ## OPEN
 
-### 2026-06-08-TASK-010
+### 2026-06-08-TASK-011
 
-时间标签：2026-06-08-TASK-010
+时间标签：2026-06-08-TASK-011
 
-开发版本号：TransForum AI Alpha 1.0.1
+开发版本号：TransForum AI Alpha 1.1
 
 新增债务：
+
+- [DEBT-011] 类型：环境依赖问题
+  描述：Gemini API Key 需要用户本地配置。
+  影响：未配置 `GEMINI_API_KEY` 时系统只能使用 Mock Fallback。
+  修复建议：在演示电脑 `backend/.env` 中配置真实 key，并在演示前确认 Translation Provider 显示 Gemini。
+  状态：open
+
+- [DEBT-012] 类型：质量风险
+  描述：Gemini 翻译质量需要真实会议语料测试。
+  影响：通用 prompt 已可用，但专业场景、长句和术语翻译质量仍未充分验证。
+  修复建议：收集真实会议中文字幕样本，建立人工验收清单并迭代 prompt。
+  状态：open
+
+- [DEBT-013] 类型：未完成功能
+  描述：Gemini Live API 暂未接入。
+  影响：当前只做文本翻译，不支持语音到语音实时同传。
+  修复建议：后续将 `gemini-3.5-live-translate-preview` 作为 AI 有声同传专项任务评估。
+  状态：open
+
+- [DEBT-014] 类型：性能风险
+  描述：Gemini 调用延迟可能影响实时字幕体验。
+  影响：网络延迟或 API 响应慢时，英文字幕可能滞后于中文字幕。
+  修复建议：后续增加异步队列、超时配置、缓存和延迟监控。
+  状态：open
+
+已解决债务：
+
+- [DEBT-001] 未配置 Gemini API Key 时只能使用 Mock 翻译：Alpha 1.1 已接入真实 Gemini 文本翻译，并保留 Mock Fallback。
+- [DEBT-006] Alpha 1.0 未接入真实 Gemini 翻译：Alpha 1.1 已接入 Gemini 文本翻译服务。
+
+当前债务总数：12
+
+### 2026-06-08-TASK-010
 
 - [DEBT-010] 类型：兼容性 / 环境依赖问题
   描述：Alpha 1.0.1 新增的 PowerShell 启动脚本仍需在不同 Windows 环境反复测试。
@@ -36,34 +69,22 @@
   修复建议：在至少两台 Windows 机器上执行 `scripts\check_environment.ps1`、`scripts\start_backend.ps1`、`scripts\start_frontend.ps1`，并根据失败场景补充端口检测和自动 fallback。
   状态：open
 
-已解决债务：
-
-- 无
-
-当前债务总数：10
-
 ### 2026-06-08-TASK-009
 
-- [DEBT-006] 类型：环境依赖问题
-  描述：Alpha 1.0 仍未接入真实 Gemini 翻译。
-  影响：英文字幕仍为 Mock 或基础翻译，客户演示需明确说明。
-  修复建议：配置 Gemini API Key，并完成真实翻译质量和失败回退验收。
-  状态：open
-
 - [DEBT-007] 类型：性能 / 实时性风险
-  描述：Alpha 1.0 仍未支持 WebSocket 推送，投屏页继续使用 2 秒轮询。
+  描述：投屏页继续使用 2 秒轮询，仍未支持 WebSocket 推送。
   影响：投屏字幕存在刷新延迟，长时间会议会产生额外轮询请求。
   修复建议：后续引入 WebSocket 或 Server-Sent Events 推送字幕。
   状态：open
 
 - [DEBT-008] 类型：未完成功能
-  描述：Alpha 1.0 仍未支持 DOCX 导出。
+  描述：仍未支持 DOCX 导出。
   影响：会议成果只能在页面和数据库中查看，不能直接导出正式文档。
   修复建议：后续基于纪要和逐字稿生成 DOCX。
   状态：open
 
 - [DEBT-009] 类型：未完成功能
-  描述：Alpha 1.0 仍未支持会议历史管理页面。
+  描述：仍未支持会议历史管理页面。
   影响：用户无法通过 UI 浏览、搜索和管理历史会议归档。
   修复建议：后续新增会议历史列表、搜索、详情和归档入口。
   状态：open
@@ -84,12 +105,6 @@
 
 ### 2026-06-08-TASK-007
 
-- [DEBT-001] 类型：临时方案
-  描述：未配置 Gemini API Key 时，`translate_zh_to_en` 使用 Mock 英文翻译。
-  影响：本地可跑通双语链路，但英文字幕不是真实 AI 翻译。
-  修复建议：配置 `GEMINI_API_KEY` 或 `GOOGLE_API_KEY` 后进行真实 Gemini 翻译验收。
-  状态：open
-
 - [DEBT-002] 类型：未自动化验收
   描述：浏览器麦克风授权、真实讲话 10 秒、投屏页实时刷新仍需人工验证。
   影响：自动化测试覆盖了 API 和构建，但未完全覆盖真实会议现场交互。
@@ -104,4 +119,5 @@
 
 ## CLOSED
 
-- 暂无
+- [DEBT-001] 关闭于 2026-06-08-TASK-011：Gemini 文本翻译已接入，未配置 key 时保留 Mock Fallback。
+- [DEBT-006] 关闭于 2026-06-08-TASK-011：Alpha 1.1 已接入真实 Gemini 文本翻译服务。

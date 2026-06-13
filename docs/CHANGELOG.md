@@ -2,6 +2,46 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.1
+
+时间标签：2026-06-08-TASK-011
+
+里程碑：Gemini Text Translation Integration
+
+新增：
+
+- `backend/.env.example` Gemini 配置模板。
+- `docs/GEMINI_SETUP.md`。
+- `google-genai` 后端依赖。
+- `meetings.translation_provider` 字段。
+- `GET /api/realtime/bilingual/{meeting_id}` 返回 `provider`。
+- Meeting Console 显示 Translation Provider。
+- Screen 投屏页显示 Translation: Gemini / Mock。
+
+变更：
+
+- 翻译服务改为优先使用 Gemini 文本翻译。
+- 未配置 Gemini API Key 时继续使用 Mock Fallback。
+- Gemini 调用失败时不会中断实时中文字幕链路，会回退 Mock。
+- `/api/health` 版本更新为 Alpha 1.1。
+- 首页、前端 metadata 和投屏页 Demo Mode 标识更新为 Alpha 1.1。
+- `backend/.env` 从 Git 跟踪中移除，避免提交真实 API Key。
+
+完成状态：代码实现完成，真实 Gemini 模式需要本地配置 API Key 后人工验收。
+
+验收结果：
+
+- 无 API Key 场景需返回 provider=`mock`。
+- 有 API Key 场景应返回 provider=`gemini`。
+- 前端构建需通过。
+- `/api/health` 需返回 `Alpha 1.1`。
+
+技术债务：
+
+- 新增债务 4 项。
+- 已解决债务 2 项。
+- 当前债务总数 12 项。
+
 ## TransForum AI Alpha 1.0.1
 
 时间标签：2026-06-08-TASK-010

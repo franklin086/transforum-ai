@@ -29,6 +29,11 @@ WHISPER_MODEL_PATH = Path(
 )
 WHISPER_DEVICE = os.getenv("TRANSFORUM_WHISPER_DEVICE", "cpu")
 WHISPER_COMPUTE_TYPE = os.getenv("TRANSFORUM_WHISPER_COMPUTE_TYPE", "int8")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+GEMINI_TRANSLATION_MODEL = os.getenv(
+    "GEMINI_TRANSLATION_MODEL",
+    os.getenv("TRANSFORUM_GEMINI_MODEL", "gemini-3.5-flash"),
+)
 
 
 def get_whisper_model_dir() -> Path:

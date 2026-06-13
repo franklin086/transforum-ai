@@ -27,7 +27,8 @@ data/transcripts/*
 # Local environment
 .env
 .env.*
-!backend/.env
+backend/.env
+!backend/.env.example
 
 # Local model files
 models/whisper/*

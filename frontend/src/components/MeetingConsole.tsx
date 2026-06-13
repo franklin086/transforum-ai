@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +16,7 @@ import {
 import type { Meeting } from "@/types/meeting";
 
 const languageLabels: Record<string, string> = {
-  zh: "中文 zh",
+  zh: "Chinese zh",
   en: "English en"
 };
 
@@ -155,6 +155,25 @@ export function MeetingConsole() {
       .toString()
       .padStart(2, "0");
     return `[${hours}:${minutes}:${seconds}]`;
+  }
+
+  function getCurrentStep() {
+    if (isEndingMeeting) {
+      return "Generating minutes";
+    }
+    if (meeting?.minutes_summary) {
+      return "Minutes generated";
+    }
+    if (meeting?.status === "ended") {
+      return "Meeting ended";
+    }
+    if (latestRealtimeText || currentTranslation) {
+      return "Captioning";
+    }
+    if (isRealtimeCaptioning) {
+      return "Listening";
+    }
+    return "Ready to start";
   }
 
   async function uploadRealtimeAudioChunk(audioBlob: Blob, chunkIndex: number) {
@@ -559,6 +578,9 @@ export function MeetingConsole() {
             <p className="mt-3 text-xl font-bold">
               Realtime Status: {realtimeStatus}
             </p>
+            <p className="mt-2 text-sm font-semibold text-meeting-blue">
+              Current Step: {getCurrentStep()}
+            </p>
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Current Chunk: {currentRealtimeChunk}
             </p>
@@ -570,6 +592,14 @@ export function MeetingConsole() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <button
+              className="rounded-lg bg-meeting-blue px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={isRealtimeCaptioning || !isWhisperReady}
+              onClick={handleStartRealtimeCaption}
+              type="button"
+            >
+              Start Realtime Caption
+            </button>
             <Link
               className="rounded-lg border border-meeting-blue px-5 py-3 text-sm font-semibold text-meeting-blue hover:bg-blue-50"
               href={`/screen?meeting_id=${encodeURIComponent(meetingId)}`}
@@ -578,12 +608,12 @@ export function MeetingConsole() {
               Open Screen Mode
             </Link>
             <button
-              className="rounded-lg bg-meeting-blue px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-              disabled={isRealtimeCaptioning || !isWhisperReady}
-              onClick={handleStartRealtimeCaption}
+              className="rounded-lg bg-red-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+              disabled={isEndingMeeting}
+              onClick={handleEndMeeting}
               type="button"
             >
-              Start Realtime Caption
+              {isEndingMeeting ? "Generating Minutes..." : "End Meeting & Generate Minutes"}
             </button>
             <button
               className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
@@ -634,7 +664,7 @@ export function MeetingConsole() {
             onClick={handleGenerateTranscript}
             type="button"
           >
-            {isTranscribing ? "Processing..." : "Generate Transcript"}
+            {isTranscribing ? "Processing..." : "Optional: Generate Full Transcript"}
           </button>
         </div>
         <div className="mt-5 rounded-lg bg-slate-50 p-4">
@@ -664,15 +694,8 @@ export function MeetingConsole() {
         >
           Stop Meeting
         </button>
-        <button
-          className="rounded-lg bg-red-700 px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-400"
-          disabled={isEndingMeeting}
-          onClick={handleEndMeeting}
-          type="button"
-        >
-          {isEndingMeeting ? "Generating Minutes..." : "End Meeting"}
-        </button>
       </div>
     </>
   );
 }
+

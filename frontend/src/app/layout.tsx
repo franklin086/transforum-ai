@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "TransForum AI Alpha 0.9",
+  title: "TransForum AI Alpha 1.0",
   description: "First Real Meeting speech recognition module"
 };
 

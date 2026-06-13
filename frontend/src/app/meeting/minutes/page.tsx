@@ -138,6 +138,13 @@ function MinutesContent() {
           Back to Console
         </Link>
         <Link
+          className="rounded-lg border border-meeting-blue bg-white px-5 py-3 text-sm font-semibold text-meeting-blue"
+          href={`/screen?meeting_id=${encodeURIComponent(meeting.id)}`}
+          target="_blank"
+        >
+          Open Screen Mode
+        </Link>
+        <Link
           className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-900"
           href="/"
         >

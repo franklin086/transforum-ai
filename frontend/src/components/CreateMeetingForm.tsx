@@ -7,7 +7,7 @@ import { createMeeting } from "@/services/api";
 
 export function CreateMeetingForm() {
   const router = useRouter();
-  const [name, setName] = useState("APEC Youth Forum Demo");
+  const [name, setName] = useState("TransForum AI Demo Meeting");
   const [sourceLanguage, setSourceLanguage] = useState("zh");
   const [targetLanguage, setTargetLanguage] = useState("en");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +67,7 @@ export function CreateMeetingForm() {
             onChange={(event) => setSourceLanguage(event.target.value)}
             value={sourceLanguage}
           >
-            <option value="zh">中文 zh</option>
+            <option value="zh">Chinese zh</option>
           </select>
         </label>
 

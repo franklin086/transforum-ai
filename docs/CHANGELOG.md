@@ -2,6 +2,46 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.0
+
+时间标签：2026-06-08-TASK-009
+
+里程碑：First Real Meeting Demo
+
+新增：
+
+- 首页 `Start First Real Meeting Demo` 演示入口。
+- 首页演示流程说明。
+- 会议控制台 `Current Step` 流程提示。
+- 投屏页 `Alpha 1.0 Demo Mode`。
+- `docs/ALPHA_1_DEMO_GUIDE.md`。
+
+变更：
+
+- 创建会议默认名称改为 `TransForum AI Demo Meeting`。
+- 创建会议默认 Source Language 为 `Chinese zh`，Target Language 为 `English en`。
+- 会议控制台按钮顺序调整为 Start Realtime Caption、Open Screen Mode、End Meeting & Generate Minutes。
+- Generate Transcript 标记为 `Optional: Generate Full Transcript`。
+- 会议纪要页增加 Back to Home、Back to Console、Open Screen Mode。
+- `/api/health` 版本更新为 Alpha 1.0。
+- README、PROJECT_RULES、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT 更新到 Alpha 1.0。
+
+完成状态：代码实现完成，真实麦克风浏览器演示需人工确认。
+
+验收结果：
+
+- 后端 Python 编译检查通过。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 1.0`。
+- 首页 Alpha 1.0 演示入口可访问。
+- 纪要页和投屏页可访问。
+
+技术债务：
+
+- 新增债务 4 项。
+- 已解决债务 0 项。
+- 当前债务总数 9 项。
+
 ## TransForum AI Alpha 0.9
 
 时间标签：2026-06-08-TASK-008

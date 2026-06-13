@@ -790,6 +790,66 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - 2026-06-08-TASK-009：TransForum AI Alpha 1.0，First Real Meeting 演示闭环打磨。
 
+## 2026-06-08-TASK-009
+
+任务编号：TASK 009
+
+时间标签：2026-06-08-TASK-009
+
+开发版本：TransForum AI Alpha 1.0
+
+任务名称：First Real Meeting 演示闭环打磨
+
+修改文件：
+
+- README.md
+- PROJECT_RULES.md
+- backend/main.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/app/meeting/minutes/page.tsx
+- frontend/src/components/CreateMeetingForm.tsx
+- frontend/src/components/MeetingConsole.tsx
+- docs/ALPHA_1_DEMO_GUIDE.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 首页新增 `Start First Real Meeting Demo`。
+- 首页新增演示步骤说明。
+- 创建会议默认名称改为 `TransForum AI Demo Meeting`。
+- 创建会议语言文案修正为 `Chinese zh` 和 `English en`。
+- 会议控制台新增 `Current Step`。
+- 会议控制台演示按钮顺序调整为 Start Realtime Caption、Open Screen Mode、End Meeting & Generate Minutes。
+- Generate Transcript 标记为 Optional。
+- 投屏页新增 Alpha 1.0 Demo Mode、会议名称、更新时间。
+- 会议纪要页新增 Open Screen Mode。
+- 新增 `docs/ALPHA_1_DEMO_GUIDE.md`。
+- `/api/health` 版本更新为 Alpha 1.0。
+- 按 Rule 2 更新 `docs/TECHNICAL_DEBT.md`。
+
+完成状态：代码实现完成，真实麦克风浏览器完整演示需人工确认。
+
+验收状态：
+
+- 后端 Python 编译检查通过。
+- 前端 `npm run build` 通过。
+- `/api/health` 返回 `Alpha 1.0`。
+- 前端生产服务页面可访问。
+
+开发债务检查结果：
+
+- 新增债务：4 项。
+- 已解决债务：0 项。
+- 当前债务总数：9 项。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

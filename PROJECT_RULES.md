@@ -146,7 +146,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 0.9
+TransForum AI Alpha 1.0
 ```
 
 版本规则：
@@ -163,7 +163,7 @@ TransForum AI Alpha 0.9
 - Alpha 0.7：中文字幕投屏模式可用
 - Alpha 0.8：中英双语字幕可用
 - Alpha 0.9：会议存档与 Rule Based 会议纪要可用
-- Alpha 1.0：First Real Meeting 完整闭环可演示
+- Alpha 1.0：First Real Meeting Demo 可演示
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

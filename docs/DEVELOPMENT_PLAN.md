@@ -1,6 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 0.9
+当前版本：TransForum AI Alpha 1.0
+
+当前里程碑：First Real Meeting Demo
 
 当前项目根目录：
 
@@ -23,35 +25,23 @@ D:\transforum-ai
 - Alpha 0.7：中文字幕投屏模式可用
 - Alpha 0.8：中英双语字幕可用
 - Alpha 0.9：会议存档与 Rule Based 会议纪要可用
-- Alpha 1.0：First Real Meeting 完整闭环可演示
+- Alpha 1.0：First Real Meeting Demo 可演示
 
-## Sprint 6：会议存档与会议纪要
+## Alpha 1.0 演示闭环
 
-目标：结束会议后自动归档会议内容，生成 Rule Based 会议纪要，并提供纪要查看页面。
+目标：把已有功能串成完整演示流程，而不是新增大功能。
 
-开发内容：
+演示流程：
 
-- 新增 `meeting_archive` 表。
-- 新增纪要字段：`minutes_summary`、`minutes_key_points`、`minutes_action_items`、`minutes_next_steps`。
-- 新增 `backend/services/minutes_service.py`。
-- 新增 `POST /api/minutes/generate`。
-- 新增 `/meeting/minutes?meeting_id=xxx`。
-- Meeting Console 新增 End Meeting。
-- End Meeting 执行归档、生成纪要、跳转纪要页。
-- 按 Rule 2 更新 `docs/TECHNICAL_DEBT.md`。
-
-验收标准：
-
-- `/api/health` 返回 Alpha 0.9。
-- 结束会议成功。
-- `meeting_archive` 写入会议内容。
-- 会议纪要字段写入 `meetings` 表。
-- `/meeting/minutes?meeting_id=xxx` 可查看历史纪要。
+1. Create Meeting
+2. Start Realtime Caption
+3. Open Screen Mode
+4. End Meeting & Generate Minutes
+5. View Meeting Minutes
 
 ## 下一阶段建议
 
-```text
-2026-06-08-TASK-009
-TransForum AI Alpha 1.0
-目标：First Real Meeting 演示闭环打磨
-```
+- 接入真实 Gemini 翻译。
+- 将投屏刷新从轮询升级到 WebSocket。
+- 增加会议历史管理页面。
+- 增加 DOCX 导出。

@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 0.9
+当前版本：TransForum AI Alpha 1.0
 
 当前项目根目录：
 
@@ -169,6 +169,8 @@ http://localhost:8000/api/health
 - Rule Based 会议纪要生成
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
 - 重新打开会议可查看历史纪要
+- 首页提供 Start First Real Meeting Demo 一键演示入口
+- Alpha 1.0 Demo Guide 已新增
 
 ## 当前 API
 
@@ -306,7 +308,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 0.9
+TransForum AI Alpha 1.0
 ```
 
 版本规则：
@@ -324,7 +326,7 @@ TransForum AI Alpha 0.9
 - Alpha 0.7：中文字幕投屏模式可用
 - Alpha 0.8：中英双语字幕可用
 - Alpha 0.9：会议存档与会后内容整理可用
-- Alpha 1.0：First Real Meeting 完整闭环可演示
+- Alpha 1.0：First Real Meeting Demo 可演示
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

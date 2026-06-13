@@ -2,6 +2,43 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.0.1
+
+时间标签：2026-06-08-TASK-010
+
+里程碑：First Real Meeting Demo Startup Stability
+
+新增：
+
+- `scripts/check_environment.ps1` 环境检查脚本。
+- `scripts/start_backend.ps1` 后端启动脚本。
+- `scripts/start_frontend.ps1` 前端启动脚本。
+- `scripts/demo_checklist.md` 演示前检查清单。
+- `data/chunks/.gitkeep`，确保 chunk 目录在干净仓库中存在。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 1.0.1。
+- 首页、前端 metadata 和投屏页 Demo Mode 标识更新为 Alpha 1.0.1。
+- README 增加演示前快速检查和脚本化启动说明。
+- Alpha 1 Demo Guide 更新为 Alpha 1.0.1 启动流程。
+- `docs/TECHNICAL_DEBT.md` 记录启动脚本跨 Windows 环境验证债务。
+
+完成状态：代码与文档更新完成，核心本地验收通过后提交。
+
+验收结果：
+
+- 环境检查脚本需输出核心项 PASS。
+- `/api/health` 需返回 `Alpha 1.0.1`。
+- 前端首页需显示 `Alpha 1.0.1`。
+- 前端 `npm run build` 需通过。
+
+技术债务：
+
+- 新增债务 1 项。
+- 已解决债务 0 项。
+- 当前债务总数 10 项。
+
 ## TransForum AI Alpha 1.0
 
 时间标签：2026-06-08-TASK-009

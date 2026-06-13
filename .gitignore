@@ -19,6 +19,8 @@ venv/
 data/*.db
 data/audio/*
 !data/audio/.gitkeep
+data/chunks/*
+!data/chunks/.gitkeep
 data/transcripts/*
 !data/transcripts/.gitkeep
 

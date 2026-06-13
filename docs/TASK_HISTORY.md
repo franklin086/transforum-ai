@@ -560,6 +560,7 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 - frontend/package-lock.json
 - frontend/src/app/layout.tsx
 - frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
 - frontend/src/components/MeetingConsole.tsx
 - frontend/src/services/api.ts
 - frontend/src/types/meeting.ts
@@ -849,6 +850,68 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 - 新增债务：4 项。
 - 已解决债务：0 项。
 - 当前债务总数：9 项。
+
+## 2026-06-08-TASK-010
+
+任务编号：TASK 010
+
+时间标签：2026-06-08-TASK-010
+
+开发版本：TransForum AI Alpha 1.0.1
+
+任务名称：演示稳定性检查与启动流程优化
+
+修改文件：
+
+- README.md
+- .gitignore
+- backend/main.py
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- docs/ALPHA_1_DEMO_GUIDE.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/CHANGELOG.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TECHNICAL_DEBT.md
+- scripts/check_environment.ps1
+- scripts/start_backend.ps1
+- scripts/start_frontend.ps1
+- scripts/demo_checklist.md
+- data/chunks/.gitkeep
+
+完成内容：
+
+- 新增环境检查脚本，检查项目目录、前后端目录、本地 Whisper tiny 模型、data 目录和 Python/Node/npm。
+- 新增后端启动脚本，统一从 `D:\transforum-ai\backend` 启动 `python -m uvicorn main:app --reload`。
+- 新增前端启动脚本，统一从 `D:\transforum-ai\frontend` 启动 `npm run dev`。
+- 新增演示前 checklist。
+- `/api/health` 版本更新为 Alpha 1.0.1。
+- 首页与前端 metadata 更新为 Alpha 1.0.1。
+- 投屏页 Demo Mode 标识更新为 Alpha 1.0.1。
+- README 和 Demo Guide 补充 Alpha 1.0.1 启动流程。
+- 按 Rule 2 更新 `docs/TECHNICAL_DEBT.md`。
+
+完成状态：代码与文档更新完成，真实投影仪和麦克风演示仍需人工确认。
+
+验收状态：
+
+- 环境检查脚本输出核心项 PASS。
+- 后端启动脚本可启动服务，`/api/health` 返回 `Alpha 1.0.1`。
+- 前端构建通过。
+- 前端启动脚本可启动开发服务；若 3000 端口占用，使用文档中的 3001 fallback。
+
+开发债务检查结果：
+
+- 新增债务：1 项。
+- 已解决债务：0 项。
+- 当前债务总数：10 项。
+
+下一阶段建议：
+
+- Alpha 1.1：真实 Gemini 翻译、WebSocket 推送、会议历史管理页面和 DOCX 导出。
 
 ## 更新规则
 

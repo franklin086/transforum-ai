@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.0
+当前版本：TransForum AI Alpha 1.0.1
 
-当前里程碑：First Real Meeting Demo
+当前里程碑：First Real Meeting Demo Startup Stability
 
 当前项目根目录：
 
@@ -26,12 +26,23 @@ D:\transforum-ai
 - Alpha 0.8：中英双语字幕可用
 - Alpha 0.9：会议存档与 Rule Based 会议纪要可用
 - Alpha 1.0：First Real Meeting Demo 可演示
+- Alpha 1.0.1：演示稳定性检查与启动流程优化
 
-## Alpha 1.0 演示闭环
+## Alpha 1.0.1 范围
 
-目标：把已有功能串成完整演示流程，而不是新增大功能。
+目标：让 Alpha 1.0 演示闭环更容易启动、更容易检查、更少依赖临场手工排错。
 
-演示流程：
+本阶段只做：
+
+- 环境检查脚本
+- 后端启动脚本
+- 前端启动脚本
+- 演示 checklist
+- README 和 Demo Guide 启动说明优化
+- `/api/health` 与首页版本更新
+- 技术债务更新
+
+## 演示流程
 
 1. Create Meeting
 2. Start Realtime Caption
@@ -42,6 +53,6 @@ D:\transforum-ai
 ## 下一阶段建议
 
 - 接入真实 Gemini 翻译。
-- 将投屏刷新从轮询升级到 WebSocket。
+- 将投屏刷新从轮询升级到 WebSocket 或 Server-Sent Events。
 - 增加会议历史管理页面。
 - 增加 DOCX 导出。

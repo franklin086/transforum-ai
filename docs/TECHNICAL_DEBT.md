@@ -1,6 +1,6 @@
 # Technical Debt
 
-本文件记录 TransForum AI 每个 TASK 完成时发现、遗留、解决的技术债务。
+本文档记录 TransForum AI 每个 TASK 完成时发现、遗留、解决的技术债务。
 
 ## 记录规则
 
@@ -16,19 +16,33 @@
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.0
+当前版本：TransForum AI Alpha 1.0.1
 
-当前债务总数：9
+当前债务总数：10
 
 ## OPEN
 
-### 2026-06-08-TASK-009
+### 2026-06-08-TASK-010
 
-时间标签：2026-06-08-TASK-009
+时间标签：2026-06-08-TASK-010
 
-开发版本号：TransForum AI Alpha 1.0
+开发版本号：TransForum AI Alpha 1.0.1
 
 新增债务：
+
+- [DEBT-010] 类型：兼容性 / 环境依赖问题
+  描述：Alpha 1.0.1 新增的 PowerShell 启动脚本仍需在不同 Windows 环境反复测试。
+  影响：演示前启动步骤已简化，但不同 PowerShell 策略、端口占用、Python/Node 路径差异仍可能造成启动失败。
+  修复建议：在至少两台 Windows 机器上执行 `scripts\check_environment.ps1`、`scripts\start_backend.ps1`、`scripts\start_frontend.ps1`，并根据失败场景补充端口检测和自动 fallback。
+  状态：open
+
+已解决债务：
+
+- 无
+
+当前债务总数：10
+
+### 2026-06-08-TASK-009
 
 - [DEBT-006] 类型：环境依赖问题
   描述：Alpha 1.0 仍未接入真实 Gemini 翻译。
@@ -36,7 +50,7 @@
   修复建议：配置 Gemini API Key，并完成真实翻译质量和失败回退验收。
   状态：open
 
-- [DEBT-007] 类型：性能/实时性风险
+- [DEBT-007] 类型：性能 / 实时性风险
   描述：Alpha 1.0 仍未支持 WebSocket 推送，投屏页继续使用 2 秒轮询。
   影响：投屏字幕存在刷新延迟，长时间会议会产生额外轮询请求。
   修复建议：后续引入 WebSocket 或 Server-Sent Events 推送字幕。
@@ -54,24 +68,18 @@
   修复建议：后续新增会议历史列表、搜索、详情和归档入口。
   状态：open
 
-已解决债务：
-
-- 无。
-
-当前债务总数：9
-
 ### 2026-06-08-TASK-008
 
 - [DEBT-004] 类型：临时方案
   描述：会议纪要当前采用 Rule Based 生成，不依赖 Gemini 或其他大模型。
   影响：纪要链路可跑通，但摘要质量有限，不能完全替代 AI 会议纪要。
-  修复建议：后续接入 Gemini 或其他本地/云端模型生成结构化纪要。
+  修复建议：后续接入 Gemini 或其他本地 / 云端模型生成结构化纪要。
   状态：open
 
 - [DEBT-005] 类型：未完成功能
   描述：`meeting_archive` 已写入数据库，但尚未提供独立的会议归档列表或搜索页面。
   影响：会议内容已归档，但用户需要通过会议 ID 或数据库才能浏览全部归档。
-  修复建议：后续新增会议归档列表页和按会议名称/时间搜索能力。
+  修复建议：后续新增会议归档列表页和按会议名称 / 时间搜索能力。
   状态：open
 
 ### 2026-06-08-TASK-007
@@ -90,10 +98,10 @@
 
 - [DEBT-003] 类型：性能风险
   描述：实时识别每个 chunk 都重新创建 WhisperModel。
-  影响：长会议或低配设备可能出现延迟和 CPU 压力。
+  影响：长会议或低配置设备可能出现延迟和 CPU 压力。
   修复建议：后续将 WhisperModel 做成本地进程级缓存或服务级单例。
   状态：open
 
 ## CLOSED
 
-- 暂无。
+- 暂无

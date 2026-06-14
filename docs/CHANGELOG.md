@@ -2,6 +2,44 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2
+
+时间标签：2026-06-09-TASK-013
+
+里程碑：WebSocket Subtitle Push
+
+新增：
+
+- 后端 WebSocket 连接管理器 `backend/websocket/connection_manager.py`。
+- WebSocket 接口 `/ws/realtime/{meeting_id}`。
+- 实时字幕识别成功后广播 `subtitle_update` 消息。
+- 前端 WebSocket 客户端 `frontend/src/services/realtimeSocket.ts`。
+- Meeting Console 显示 `WebSocket Status`。
+- Screen 投屏页显示 `Realtime: WebSocket / Polling Fallback`。
+- WebSocket 推送基础测试 `backend/tests/test_realtime_websocket.py`。
+
+变更：
+
+- `/api/health` 版本更新为 Alpha 1.2。
+- 投屏页从单纯 2 秒轮询升级为 WebSocket 优先刷新。
+- WebSocket 不可用时保留原有 Polling Fallback。
+- Screen 投屏页继续显示 Gemini / Mock provider 和翻译延迟。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT、ALPHA_1_DEMO_GUIDE 更新到 Alpha 1.2。
+
+验收结果：
+
+- 后端 Python 编译通过。
+- 后端单元测试通过，包含 WebSocket broadcast 测试。
+- 前端构建通过。
+- `/api/health` 返回 `Alpha 1.2`。
+- `/ws/realtime/{meeting_id}` 握手验证通过。
+
+技术债务：
+
+- 新增债务 4 项。
+- 已解决债务 1 项：`DEBT-007` 投屏页单纯依赖 2 秒轮询。
+- 当前债务总数 16 项。
+
 ## TransForum AI Alpha 1.1.2
 
 时间标签：2026-06-08-TASK-012

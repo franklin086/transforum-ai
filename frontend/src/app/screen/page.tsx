@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { getMeeting, getRealtimeBilingualTranscript } from "@/services/api";
+import { connectRealtimeSocket } from "@/services/realtimeSocket";
 
 function extractRecentLines(chinese: string, english: string) {
   return [chinese, english]
@@ -20,6 +21,7 @@ function ScreenContent() {
   const [englishCaption, setEnglishCaption] = useState("");
   const [translationProvider, setTranslationProvider] = useState("Mock");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
+  const [realtimeMode, setRealtimeMode] = useState("Polling Fallback");
   const [updatedAt, setUpdatedAt] = useState("");
   const [status, setStatus] = useState("Waiting for meeting");
   const recentLines = useMemo(
@@ -44,6 +46,29 @@ function ScreenContent() {
 
   useEffect(() => {
     if (!meetingId) {
+      return;
+    }
+
+    return connectRealtimeSocket(
+      meetingId,
+      (message) => {
+        setChineseCaption(message.chinese);
+        setEnglishCaption(message.english);
+        setTranslationProvider(message.provider === "gemini" ? "Gemini" : "Mock");
+        setTranslationLatencyMs(message.translation_latency_ms ?? 0);
+        setUpdatedAt(message.timestamp);
+        setStatus("Live");
+      },
+      (socketStatus) => {
+        setRealtimeMode(
+          socketStatus === "Connected" ? "WebSocket" : "Polling Fallback"
+        );
+      }
+    );
+  }, [meetingId]);
+
+  useEffect(() => {
+    if (!meetingId || realtimeMode === "WebSocket") {
       return;
     }
 
@@ -76,7 +101,7 @@ function ScreenContent() {
       isActive = false;
       window.clearInterval(intervalId);
     };
-  }, [meetingId]);
+  }, [meetingId, realtimeMode]);
 
   async function handleFullscreen() {
     if (!document.fullscreenElement) {
@@ -96,7 +121,7 @@ function ScreenContent() {
               TransForum AI Live Caption
             </h1>
             <p className="mt-2 text-sm font-semibold uppercase tracking-[0.24em] text-blue-200">
-              Alpha 1.1.2 Demo Mode
+              Alpha 1.2 Demo Mode
             </p>
             <p className="mt-3 text-lg text-blue-100 md:text-2xl">
               {meetingName || meetingId || "No meeting selected"}
@@ -106,6 +131,9 @@ function ScreenContent() {
               {translationProvider === "Gemini"
                 ? ` · ${translationLatencyMs} ms`
                 : ""}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-blue-100/80">
+              Realtime: {realtimeMode}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

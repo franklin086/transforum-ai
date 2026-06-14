@@ -4,9 +4,9 @@
 
 项目名称：TransForum AI
 
-当前开发版本号：TransForum AI Alpha 1.1.2
+当前开发版本号：TransForum AI Alpha 1.2
 
-当前里程碑：Gemini Translation Quality and Latency Optimization
+当前里程碑：WebSocket Subtitle Push
 
 当前项目根目录：
 
@@ -16,9 +16,9 @@ D:\transforum-ai
 
 ## 当前阶段
 
-Alpha 1.1.2 优化 Gemini 文本翻译质量、稳定性和延迟可观测性。
+Alpha 1.2 将实时字幕投屏从 2 秒轮询升级为 WebSocket 优先推送，并保留 Polling Fallback。
 
-本阶段不接入 Gemini Live API，不做语音到语音翻译、AI 语音播报、WebSocket、DOCX 导出或用户系统。
+本阶段不接入 Gemini Live API，不做语音到语音翻译、AI 语音播报、DOCX 导出或用户系统。
 
 ## 当前已完成能力
 
@@ -35,26 +35,36 @@ Alpha 1.1.2 优化 Gemini 文本翻译质量、稳定性和延迟可观测性。
 - Meeting Console 显示 `Translation` 和 `Latency`。
 - Screen 投屏页显示 `Translation: Gemini · xxx ms`。
 - 新增 `backend/tests/test_translation_service.py`。
+- 新增后端 WebSocket 连接管理器。
+- 新增 `/ws/realtime/{meeting_id}` WebSocket 字幕推送接口。
+- 实时字幕 chunk 识别成功后广播 `subtitle_update` 消息。
+- Meeting Console 显示 `WebSocket Status`。
+- Screen 投屏页优先使用 WebSocket 刷新字幕。
+- Screen 投屏页保留 2 秒 Polling Fallback。
+- Screen 投屏页显示 `Realtime: WebSocket / Polling Fallback`。
+- 新增 `backend/tests/test_realtime_websocket.py`。
 
 ## 当前限制
 
 - Gemini 翻译延迟仍需真实会议长时间测试。
 - Gemini 字幕术语一致性仍需嘉宾专属词库支持。
 - Gemini Live API 暂未接入。
-- 投屏刷新仍为 2 秒轮询，后续可升级 WebSocket。
+- WebSocket 长时间会议稳定性仍需真实环境测试。
+- WebSocket 断线重连策略仍需真实会议验证。
+- 多个投屏页同时连接时仍需压力测试。
 - DOCX 导出仍未实现。
 - 会议历史管理页面仍未实现。
 
 ## 当前最新任务记录
 
-时间标签：2026-06-08-TASK-012
+时间标签：2026-06-09-TASK-013
 
-开发版本号：TransForum AI Alpha 1.1.2
+开发版本号：TransForum AI Alpha 1.2
 
-任务名称：Gemini 翻译质量与延迟优化
+任务名称：WebSocket 字幕推送
 
-完成状态：本地后端、翻译服务、fallback、前端构建和 3001 页面验收通过。
+完成状态：后端 WebSocket、投屏页 WebSocket 优先刷新、Polling Fallback、前端构建和后端测试通过。
 
 下一阶段建议：
 
-- Alpha 1.2：WebSocket 字幕推送或 Gemini 术语一致性专项优化。
+- Alpha 1.3：WebSocket 长会议稳定性、重连策略或 DOCX 导出专项。

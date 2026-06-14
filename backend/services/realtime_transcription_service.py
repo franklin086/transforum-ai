@@ -1,3 +1,5 @@
+import asyncio
+from datetime import datetime
 from pathlib import Path
 import re
 import shutil
@@ -16,6 +18,7 @@ from services.meeting_repository import (
     get_meeting,
 )
 from services.translation_service import translate_zh_to_en
+from websocket.connection_manager import manager
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -44,6 +47,28 @@ def _format_chunk_timestamp(chunk_index: int) -> str:
 
 def _realtime_transcript_path(meeting_id: str) -> Path:
     return TRANSCRIPTS_DIR / f"{_safe_meeting_name(meeting_id)}_realtime_transcript.txt"
+
+
+def _broadcast_subtitle_update(
+    meeting_id: str,
+    chinese: str,
+    english: str,
+    provider: str,
+    latency_ms: int,
+) -> None:
+    message = {
+        "type": "subtitle_update",
+        "meeting_id": meeting_id,
+        "chinese": chinese,
+        "english": english,
+        "provider": provider,
+        "translation_latency_ms": latency_ms,
+        "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),
+    }
+    try:
+        asyncio.run(manager.broadcast(meeting_id, message))
+    except Exception as error:
+        print(f"WebSocket subtitle broadcast failed: {error}")
 
 
 def save_realtime_chunk(audio: UploadFile, meeting_id: str, chunk_index: int) -> Path:
@@ -113,6 +138,13 @@ def transcribe_realtime_chunk(
                     translation_provider,
                     translation_latency_ms,
                 )
+            _broadcast_subtitle_update(
+                meeting_id,
+                text,
+                english_text,
+                translation_provider,
+                translation_latency_ms,
+            )
         else:
             english_text = ""
             translation_result = {

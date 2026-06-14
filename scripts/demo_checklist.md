@@ -1,4 +1,4 @@
-# TransForum AI Alpha 1.1.2 Demo Checklist
+# TransForum AI Alpha 1.2 Demo Checklist
 
 ## 演示前检查
 
@@ -9,7 +9,7 @@
 - 后端启动
 - 前端启动
 - 浏览器可访问
-- `/api/health` 返回 Alpha 1.1.2
+- `/api/health` 返回 Alpha 1.2
 
 ## 演示流程
 
@@ -20,9 +20,11 @@
 5. 打开 Screen Mode
 6. 朗读测试语句
 7. 检查中英双语字幕
-8. 结束会议
-9. 生成会议纪要
-10. 打开会议纪要页
+8. 检查投屏页显示 Realtime: WebSocket
+9. 断开或阻断 WebSocket 时确认 Polling Fallback 可用
+10. 结束会议
+11. 生成会议纪要
+12. 打开会议纪要页
 
 ## 推荐测试语句
 

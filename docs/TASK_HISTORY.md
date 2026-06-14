@@ -1119,6 +1119,73 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.2：WebSocket 字幕推送或 Gemini 术语一致性专项优化。
 
+## 2026-06-09-TASK-013
+
+任务编号：TASK 013
+
+时间标签：2026-06-09-TASK-013
+
+开发版本：TransForum AI Alpha 1.2
+
+任务名称：WebSocket 字幕推送
+
+修改文件：
+
+- README.md
+- backend/api/realtime.py
+- backend/main.py
+- backend/services/realtime_transcription_service.py
+- backend/tests/test_realtime_websocket.py
+- backend/websocket/__init__.py
+- backend/websocket/connection_manager.py
+- docs/ALPHA_1_DEMO_GUIDE.md
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+- frontend/package.json
+- frontend/package-lock.json
+- frontend/src/app/layout.tsx
+- frontend/src/app/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/realtimeSocket.ts
+- scripts/check_environment.ps1
+- scripts/demo_checklist.md
+
+完成内容：
+
+- 新增后端 WebSocket 连接管理器。
+- 新增 `/ws/realtime/{meeting_id}` 字幕推送接口。
+- 实时中文 chunk 识别和英文翻译保存后广播 `subtitle_update`。
+- Meeting Console 显示 WebSocket 连接状态。
+- Screen 投屏页优先通过 WebSocket 接收字幕。
+- WebSocket 不可用时保留 2 秒 Polling Fallback。
+- 投屏页显示 `Realtime: WebSocket / Polling Fallback`。
+- 新增 WebSocket broadcast 单元测试。
+
+完成状态：代码、文档和技术债务更新完成，自动化构建与后端测试通过；真实麦克风和投影仪联动仍需人工 UAT。
+
+验收状态：
+
+- `python -m compileall .` 通过。
+- `python -m unittest discover -s tests` 通过。
+- `/api/health` 返回 `Alpha 1.2`。
+- `/ws/realtime/{meeting_id}` 握手验证通过。
+- 前端 `npm run build` 通过。
+- `backend/.env` 仍被 Git 忽略。
+
+开发债务检查结果：
+
+- 新增债务：4 项。
+- 已解决债务：1 项，`DEBT-007`。
+- 当前债务总数：16 项。
+
+下一阶段建议：
+
+- Alpha 1.3：WebSocket 长会议稳定性、断线重连和多投屏连接测试，或 DOCX 导出专项。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

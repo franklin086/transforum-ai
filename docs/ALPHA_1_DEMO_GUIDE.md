@@ -1,10 +1,10 @@
-# TransForum AI Alpha 1.1.2 Demo Guide
+# TransForum AI Alpha 1.2 Demo Guide
 
 ## 演示目标
 
 一个人、一台电脑、一个麦克风、一台投影仪，5 分钟内启动一场中英双语 AI 同传会议，并生成会议纪要。
 
-Alpha 1.1.2 在 Alpha 1.0 First Real Meeting Demo 的基础上优化 Gemini 翻译质量、稳定性和延迟显示，并继续保留演示启动检查流程。
+Alpha 1.2 在 Alpha 1.1.2 的基础上增加 WebSocket 字幕推送。投屏页优先实时接收中英双语字幕，并在 WebSocket 不可用时保留 2 秒轮询兜底。
 
 ## 演示前环境检查
 
@@ -42,7 +42,7 @@ http://localhost:8000
 {
   "status": "ok",
   "project": "TransForum AI",
-  "version": "Alpha 1.1.2"
+  "version": "Alpha 1.2"
 }
 ```
 
@@ -82,8 +82,9 @@ http://localhost:3001
 5. 打开 Screen Mode
 6. 朗读测试语句
 7. 检查中英双语字幕
-8. 结束会议
-9. 查看会议纪要
+8. 检查投屏页底部显示 `Realtime: WebSocket`
+9. 结束会议
+10. 查看会议纪要
 
 ## 推荐测试语句
 
@@ -99,10 +100,11 @@ scripts\demo_checklist.md
 
 ## 当前限制
 
-- 英文翻译仍为 Mock 或基础翻译，后续接 Gemini。
+- 英文翻译优先使用 Gemini，未配置或调用失败时使用 Mock Fallback。
 - 真实麦克风测试需人工确认。
 - Whisper tiny 模型适合演示，不适合正式高精度会议。
-- 投屏刷新仍为轮询，后续可升级 WebSocket。
+- 投屏页已支持 WebSocket 优先刷新，但长时间会议稳定性仍需继续测试。
+- WebSocket 断线重连和多投屏连接仍需真实会议验证。
 - 新增启动脚本仍需在不同 Windows 环境反复测试。
 - Gemini API Key 已在本机验证可用；其他演示电脑仍需要本地配置。
 - Gemini 延迟已显示为毫秒数，但真实会议长时间延迟仍需继续测试。

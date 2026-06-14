@@ -1,15 +1,17 @@
 from datetime import datetime
 import re
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 
 from services.meeting_repository import get_meeting
 from services.realtime_transcription_service import (
     save_realtime_chunk,
     transcribe_realtime_chunk,
 )
+from websocket.connection_manager import manager
 
 router = APIRouter()
+websocket_router = APIRouter()
 
 
 def _latest_text_from_transcript(transcript: str) -> str:
@@ -78,3 +80,19 @@ def get_bilingual_realtime_transcript(meeting_id: str):
         "latency_ms": meeting.translation_latency_ms or 0,
         "updated_at": datetime.utcnow().replace(microsecond=0).isoformat(),
     }
+
+
+@websocket_router.websocket("/ws/realtime/{meeting_id}")
+async def websocket_realtime_subtitles(websocket: WebSocket, meeting_id: str):
+    if get_meeting(meeting_id) is None:
+        await websocket.close(code=1008)
+        return
+
+    await manager.connect(meeting_id, websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(meeting_id, websocket)
+    except Exception:
+        manager.disconnect(meeting_id, websocket)

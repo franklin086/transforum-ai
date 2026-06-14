@@ -7,12 +7,14 @@ import {
   endMeeting,
   generateMinutes,
   getMeeting,
+  getRealtimeBilingualTranscript,
   getTranscription,
   getWhisperModelStatus,
   startTranscription,
   transcribeRealtimeChunk,
   uploadMeetingAudio
 } from "@/services/api";
+import { connectRealtimeSocket } from "@/services/realtimeSocket";
 import type { Meeting } from "@/types/meeting";
 
 const languageLabels: Record<string, string> = {
@@ -59,6 +61,7 @@ export function MeetingConsole() {
   const [currentTranslation, setCurrentTranslation] = useState("");
   const [translationProvider, setTranslationProvider] = useState("Mock Fallback");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
+  const [webSocketStatus, setWebSocketStatus] = useState("Disconnected");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
   const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
@@ -130,6 +133,60 @@ export function MeetingConsole() {
       realtimeStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
+
+  useEffect(() => {
+    if (!meetingId) {
+      return;
+    }
+
+    return connectRealtimeSocket(
+      meetingId,
+      (message) => {
+        setLatestRealtimeText(message.chinese);
+        setCurrentTranslation(message.english);
+        setTranslationProvider(
+          message.provider === "gemini" ? "Gemini" : "Mock Fallback"
+        );
+        setTranslationLatencyMs(message.translation_latency_ms ?? 0);
+        setRealtimeStatus("Captioning");
+      },
+      setWebSocketStatus
+    );
+  }, [meetingId]);
+
+  useEffect(() => {
+    if (!meetingId || webSocketStatus !== "Fallback Polling") {
+      return;
+    }
+
+    let isActive = true;
+    const activeMeetingId = meetingId;
+
+    async function refreshBilingualTranscript() {
+      try {
+        const result = await getRealtimeBilingualTranscript(activeMeetingId);
+        if (!isActive) {
+          return;
+        }
+        setLatestRealtimeText(result.chinese);
+        setCurrentTranslation(result.english);
+        setTranslationProvider(
+          result.provider === "gemini" ? "Gemini" : "Mock Fallback"
+        );
+        setTranslationLatencyMs(result.latency_ms ?? 0);
+      } catch {
+        setWebSocketStatus("Error");
+      }
+    }
+
+    void refreshBilingualTranscript();
+    const intervalId = window.setInterval(refreshBilingualTranscript, 2000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intervalId);
+    };
+  }, [meetingId, webSocketStatus]);
 
   function formatDuration(seconds: number) {
     const minutes = Math.floor(seconds / 60)
@@ -595,6 +652,9 @@ export function MeetingConsole() {
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Current Chunk: {currentRealtimeChunk}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              WebSocket Status: {webSocketStatus}
             </p>
             <p className="mt-2 text-sm text-slate-600">
               Latest Text: {latestRealtimeText || "No realtime text yet."}

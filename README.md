@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.1.2
+当前版本：TransForum AI Alpha 1.2
 
 当前项目根目录：
 
@@ -88,7 +88,7 @@ TransForum AI 的目标不是做一个功能丰富的翻译软件，而是让任
 
 创建会议 → 接入麦克风 → 实时语音识别 → 实时中英翻译 → 双语字幕投屏 → 保存会议内容 → 生成中英文逐字稿和会议纪要 → 导出会议成果
 
-## Alpha 1.1.2 演示前快速检查
+## Alpha 1.2 演示前快速检查
 
 进入项目根目录：
 
@@ -99,7 +99,7 @@ powershell -ExecutionPolicy Bypass -File scripts\check_environment.ps1
 
 该脚本会检查项目目录、前后端目录、本地 Whisper tiny 模型、`data\audio`、`data\chunks`、`data\transcripts`、Python、Node 和 npm。
 
-## Alpha 1.1.2 一键启动脚本
+## Alpha 1.2 一键启动脚本
 
 后端：
 
@@ -212,18 +212,35 @@ http://localhost:8000/api/health
 - SQLite 保存 `translation_provider`
 - SQLite 保存 `translation_latency_ms`
 - `/api/realtime/bilingual/{meeting_id}` 返回中英双语字幕
+- `/ws/realtime/{meeting_id}` 推送实时中英双语字幕
 - 投屏页同步显示中文与 English 字幕
+- 投屏页优先使用 WebSocket 实时刷新字幕
+- 投屏页保留 2 秒 Polling Fallback
 - 会议控制台显示 Current Translation
 - 会议控制台显示 Translation Provider
+- 会议控制台显示 WebSocket Status
 - 投屏页显示 Translation: Gemini / Mock
+- 投屏页显示 Realtime: WebSocket / Polling Fallback
 - 结束会议并归档到 `meeting_archive`
 - Rule Based 会议纪要生成
+
+## Alpha 1.2 WebSocket 字幕推送
+
+Alpha 1.2 将投屏页从单纯 2 秒轮询升级为 WebSocket 优先推送：
+
+- 后端 WebSocket：`ws://localhost:8000/ws/realtime/{meeting_id}`
+- 投屏页：`/screen?meeting_id=xxx`
+- 控制台显示：`WebSocket Status: Connected / Disconnected / Fallback Polling / Error`
+- 投屏页显示：`Realtime: WebSocket` 或 `Realtime: Polling Fallback`
+
+当 WebSocket 不可用时，前端自动保留原有 2 秒轮询兜底，不影响字幕演示闭环。
+
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
 - 重新打开会议可查看历史纪要
 - 首页提供 Start First Real Meeting Demo 一键演示入口
-- Alpha 1.1.2 Demo Guide 已更新
-- Alpha 1.1.2 演示前环境检查脚本已可用
-- Alpha 1.1.2 前后端启动脚本已可用
+- Alpha 1.2 Demo Guide 已更新
+- Alpha 1.2 演示前环境检查脚本已可用
+- Alpha 1.2 前后端启动脚本已可用
 - Gemini API Setup 文档已新增
 - Gemini API Key 本机配置成功
 - Gemini 真实文本翻译验收通过
@@ -240,7 +257,8 @@ http://localhost:8000/api/health
 - `GET /api/transcription/model-status`
 - `POST /api/realtime/transcribe-chunk`
 - `GET /api/realtime/transcript/{meeting_id}`
-- `GET /api/realtime/bilingual/{meeting_id}`，返回 `provider`
+- `GET /api/realtime/bilingual/{meeting_id}`，返回 `provider` 和 `latency_ms`
+- `WS /ws/realtime/{meeting_id}`
 - `POST /api/minutes/generate`
 - `POST /api/meeting/start`
 - `POST /api/meeting/end`
@@ -393,7 +411,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.1.2
+TransForum AI Alpha 1.2
 ```
 
 版本规则：
@@ -416,6 +434,7 @@ TransForum AI Alpha 1.1.2
 - Alpha 1.1：Gemini 真实文本翻译接入
 - Alpha 1.1.1：Gemini API Key 本机配置与真实翻译验收通过
 - Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
+- Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

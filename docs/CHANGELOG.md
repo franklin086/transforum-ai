@@ -2,6 +2,38 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2.1
+
+时间标签：2026-06-09-TASK-014
+
+里程碑：Field Test Preparation
+
+新增：
+
+- `docs/FIELD_TEST_CHECKLIST.md`
+- `docs/FIELD_TEST_REPORT_TEMPLATE.md`
+- `docs/ISSUE_FEEDBACK_TEMPLATE.md`
+- `docs/POST_TEST_REVIEW_TEMPLATE.md`
+
+变更：
+
+- README 增加 Alpha 1.2.1 Field Test Preparation 说明。
+- CURRENT_STATUS 更新为现场测试文档准备完成。
+- DEVELOPMENT_PLAN 增加 Alpha 1.2.1 现场测试准备阶段和 Alpha 1.2.2 现场测试问题修复。
+- TECHNICAL_DEBT 增加现场测试相关债务。
+
+验收结果：
+
+- 新增四个现场测试文档文件。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、DEVELOPMENT_PLAN、TECHNICAL_DEBT 已更新。
+- 本任务未修改 backend、frontend、database、api、websocket、Gemini 或 Whisper 核心代码。
+
+技术债务：
+
+- 新增债务 6 项。
+- 已解决债务 0 项。
+- 当前债务总数 22 项。
+
 ## TransForum AI Alpha 1.2
 
 时间标签：2026-06-09-TASK-013

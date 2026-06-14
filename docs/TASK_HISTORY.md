@@ -1186,6 +1186,61 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.3：WebSocket 长会议稳定性、断线重连和多投屏连接测试，或 DOCX 导出专项。
 
+## 2026-06-09-TASK-014
+
+任务编号：TASK 014
+
+时间标签：2026-06-09-TASK-014
+
+开发版本：TransForum AI Alpha 1.2.1
+
+任务名称：现场测试清单与问题记录模板
+
+修改文件：
+
+- README.md
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/FIELD_TEST_CHECKLIST.md
+- docs/FIELD_TEST_REPORT_TEMPLATE.md
+- docs/ISSUE_FEEDBACK_TEMPLATE.md
+- docs/POST_TEST_REVIEW_TEMPLATE.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 新增会前检查清单。
+- 新增现场测试报告模板。
+- 新增问题反馈模板。
+- 新增测试后复盘模板。
+- README 增加现场测试说明。
+- 技术债务清单增加现场测试债务。
+
+完成状态：完成。
+
+验收状态：
+
+- 新增四个现场测试文档文件。
+- README 已更新。
+- CURRENT_STATUS 已更新。
+- TASK_HISTORY 已更新。
+- CHANGELOG 已更新。
+- TECHNICAL_DEBT 已更新。
+- DEVELOPMENT_PLAN 已更新。
+- 本任务未修改核心功能代码。
+
+开发债务检查结果：
+
+- 新增债务：6 项。
+- 已解决债务：0 项。
+- 当前债务总数：22 项。
+
+下一阶段建议：
+
+- Alpha 1.2.2：真实会议现场测试问题修复。
+
 ## 更新规则
 
 每个 TASK 完成后，Codex 必须更新本文件，记录：

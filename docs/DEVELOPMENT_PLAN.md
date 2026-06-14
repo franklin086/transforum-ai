@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.2
+当前版本：TransForum AI Alpha 1.2.1
 
-当前里程碑：WebSocket Subtitle Push
+当前里程碑：Field Test Preparation
 
 当前项目根目录：
 
@@ -31,33 +31,33 @@ D:\transforum-ai
 - Alpha 1.1.1：Gemini API Key 本机配置与真实翻译验收通过
 - Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
 - Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
+- Alpha 1.2.1：现场测试准备阶段
 
-## Alpha 1.2 范围
+## Alpha 1.2.1 范围
 
-目标：让会议控制台和投屏页优先通过 WebSocket 接收实时中英字幕，降低投屏刷新延迟，同时保留 2 秒轮询兜底。
+目标：为真实会议现场测试准备清单、记录模板、问题反馈模板和测试后复盘模板。
 
 本阶段只做：
 
-- 后端 WebSocket 连接管理器
-- `/ws/realtime/{meeting_id}` 字幕推送接口
-- 实时字幕生成后广播 `subtitle_update`
-- Meeting Console WebSocket 状态显示
-- Screen 投屏页 WebSocket 优先刷新
-- Polling Fallback 保留
-- WebSocket 基础测试
+- 现场测试会前检查清单
+- 现场测试报告模板
+- 问题反馈模板
+- 测试后复盘模板
+- README 现场测试说明
 - 文档和技术债务更新
 
 本阶段不做：
 
 - Gemini Live API
 - AI 语音播报
+- 后端、前端、数据库、API 或 WebSocket 代码修改
 - DOCX 导出
 - 手机扫码
 - 用户系统
 
 ## 下一阶段建议
 
+- Alpha 1.2.2：现场测试问题修复。
 - WebSocket 长会议稳定性和断线重连专项。
 - Gemini 术语一致性和嘉宾词库专项。
-- 真实会议长时间字幕延迟测试。
 - 增加 DOCX 导出。

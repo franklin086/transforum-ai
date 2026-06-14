@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.2
+当前版本：TransForum AI Alpha 1.2.1
 
 当前项目根目录：
 
@@ -235,6 +235,34 @@ Alpha 1.2 将投屏页从单纯 2 秒轮询升级为 WebSocket 优先推送：
 
 当 WebSocket 不可用时，前端自动保留原有 2 秒轮询兜底，不影响字幕演示闭环。
 
+## Alpha 1.2.1 Field Test Preparation
+
+当前版本用于 Alpha 现场验证准备，不新增核心功能。
+
+明天真实会议测试前应先查看：
+
+```text
+docs/FIELD_TEST_CHECKLIST.md
+```
+
+测试后填写：
+
+```text
+docs/FIELD_TEST_REPORT_TEMPLATE.md
+```
+
+问题记录使用：
+
+```text
+docs/ISSUE_FEEDBACK_TEMPLATE.md
+```
+
+测试后复盘使用：
+
+```text
+docs/POST_TEST_REVIEW_TEMPLATE.md
+```
+
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
 - 重新打开会议可查看历史纪要
 - 首页提供 Start First Real Meeting Demo 一键演示入口
@@ -411,7 +439,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.2
+TransForum AI Alpha 1.2.1
 ```
 
 版本规则：
@@ -435,6 +463,7 @@ TransForum AI Alpha 1.2
 - Alpha 1.1.1：Gemini API Key 本机配置与真实翻译验收通过
 - Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
 - Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
+- Alpha 1.2.1：真实会议现场测试文档准备
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

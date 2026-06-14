@@ -1186,6 +1186,60 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 
 - Alpha 1.3：WebSocket 长会议稳定性、断线重连和多投屏连接测试，或 DOCX 导出专项。
 
+## 2026-06-09-TASK-014A
+
+任务编号：TASK 014A
+
+时间标签：2026-06-09-TASK-014A
+
+开发版本：TransForum AI Alpha 1.2.2
+
+任务名称：现场测试重点调整
+
+修改文件：
+
+- README.md
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/DEVELOPMENT_PLAN.md
+- docs/FIELD_TEST_CHECKLIST.md
+- docs/FIELD_TEST_REPORT_TEMPLATE.md
+- docs/ISSUE_FEEDBACK_TEMPLATE.md
+- docs/POST_TEST_REVIEW_TEMPLATE.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 将现场测试重点调整为实时翻译准确率和响应速度。
+- 将完整会议流程顺畅度列为第二优先级。
+- 将笔记本内置麦克风识别率列为第三优先级。
+- 明确本次暂不重点测试投屏效果，只做 `/screen` 基础打开检查。
+- 现场测试报告模板增加翻译、响应速度、完整流程和内置麦克风评分表。
+- 测试后复盘模板增加关键结论和下一步最高优先级选择。
+- 技术债务清单增加现场测试重点相关债务。
+
+完成状态：完成。
+
+验收状态：
+
+- FIELD_TEST_CHECKLIST 已调整。
+- FIELD_TEST_REPORT_TEMPLATE 已调整。
+- POST_TEST_REVIEW_TEMPLATE 已调整。
+- ISSUE_FEEDBACK_TEMPLATE 已调整。
+- README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、TECHNICAL_DEBT 已更新。
+- 本任务未修改核心功能代码。
+
+开发债务检查结果：
+
+- 新增债务：5 项。
+- 已解决债务：0 项。
+- 当前债务总数：27 项。
+
+下一阶段建议：
+
+- 根据明天真实会议测试结果进入 Alpha 1.2.3 或 Alpha 1.3 问题修复。
+
 ## 2026-06-09-TASK-014
 
 任务编号：TASK 014

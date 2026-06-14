@@ -10,7 +10,7 @@ ISSUE-YYYYMMDD-001
 
 ## 问题类型
 
-麦克风 / Whisper / Gemini / WebSocket / 投屏 / 会议纪要 / UI / 其他
+内置麦克风 / Whisper / Gemini 翻译准确率 / Gemini 翻译延迟 / 完整会议流程 / 会议纪要 / WebSocket / 投屏 / UI / 其他
 
 ## 问题描述
 

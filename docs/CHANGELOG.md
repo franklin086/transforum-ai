@@ -2,6 +2,33 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2.2
+
+时间标签：2026-06-09-TASK-014A
+
+里程碑：Field Test Focus Update
+
+变更：
+
+- `docs/FIELD_TEST_CHECKLIST.md` 调整为 Alpha 1.2.2 Field Test Focus。
+- 现场测试重点调整为实时翻译准确率、实时翻译响应速度、完整会议流程顺畅度和笔记本内置麦克风识别率。
+- `docs/FIELD_TEST_REPORT_TEMPLATE.md` 增加实时翻译、响应速度、完整流程和笔记本内置麦克风评分表。
+- `docs/POST_TEST_REVIEW_TEMPLATE.md` 增加本次测试结论和下一步最高优先级选择。
+- `docs/ISSUE_FEEDBACK_TEMPLATE.md` 增加内置麦克风、Gemini 翻译准确率、Gemini 翻译延迟和完整会议流程分类。
+- README 增加 Alpha 1.2.2 Field Test Focus 说明。
+- TECHNICAL_DEBT 增加现场测试重点相关债务。
+
+验收结果：
+
+- 指定文档已更新到 Alpha 1.2.2。
+- 本任务未修改 backend、frontend、database、websocket、Gemini 或 Whisper 核心代码。
+
+技术债务：
+
+- 新增债务 5 项。
+- 已解决债务 0 项。
+- 当前债务总数 27 项。
+
 ## TransForum AI Alpha 1.2.1
 
 时间标签：2026-06-09-TASK-014

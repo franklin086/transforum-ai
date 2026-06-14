@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.2.1
+当前版本：TransForum AI Alpha 1.2.2
 
 当前项目根目录：
 
@@ -263,6 +263,19 @@ docs/ISSUE_FEEDBACK_TEMPLATE.md
 docs/POST_TEST_REVIEW_TEMPLATE.md
 ```
 
+## Alpha 1.2.2 Field Test Focus
+
+本次现场测试重点不是投屏。
+
+本次测试重点：
+
+1. 实时翻译准确率
+2. 实时翻译响应速度
+3. 会议完整流程顺畅度
+4. 笔记本内置麦克风识别率
+
+投屏页本次只做基础打开检查，不评价大屏显示质量、投影仪适配或远距离可读性。
+
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
 - 重新打开会议可查看历史纪要
 - 首页提供 Start First Real Meeting Demo 一键演示入口
@@ -439,7 +452,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.2.1
+TransForum AI Alpha 1.2.2
 ```
 
 版本规则：
@@ -464,6 +477,7 @@ TransForum AI Alpha 1.2.1
 - Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
 - Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
 - Alpha 1.2.1：真实会议现场测试文档准备
+- Alpha 1.2.2：现场测试重点调整为翻译、流程和内置麦克风
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

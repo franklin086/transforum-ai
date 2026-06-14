@@ -1,8 +1,8 @@
 # TransForum AI Development Plan
 
-当前版本：TransForum AI Alpha 1.2.1
+当前版本：TransForum AI Alpha 1.2.2
 
-当前里程碑：Field Test Preparation
+当前里程碑：Field Test Focus Update
 
 当前项目根目录：
 
@@ -32,17 +32,18 @@ D:\transforum-ai
 - Alpha 1.1.2：Gemini 翻译质量、稳定性与延迟记录优化
 - Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
 - Alpha 1.2.1：现场测试准备阶段
+- Alpha 1.2.2：现场测试重点调整为翻译、流程和内置麦克风
 
-## Alpha 1.2.1 范围
+## Alpha 1.2.2 范围
 
-目标：为真实会议现场测试准备清单、记录模板、问题反馈模板和测试后复盘模板。
+目标：根据明天真实会议测试目标，调整现场测试重点。本次暂不重点评价投屏效果，优先验证实时翻译准确率、翻译响应速度、完整会议流程顺畅度和笔记本内置麦克风识别率。
 
 本阶段只做：
 
-- 现场测试会前检查清单
-- 现场测试报告模板
-- 问题反馈模板
-- 测试后复盘模板
+- 调整现场测试会前检查清单
+- 调整现场测试报告模板
+- 调整问题反馈模板
+- 调整测试后复盘模板
 - README 现场测试说明
 - 文档和技术债务更新
 
@@ -57,7 +58,7 @@ D:\transforum-ai
 
 ## 下一阶段建议
 
-- Alpha 1.2.2：现场测试问题修复。
+- Alpha 1.2.3 或 Alpha 1.3：现场测试问题修复。
 - WebSocket 长会议稳定性和断线重连专项。
 - Gemini 术语一致性和嘉宾词库专项。
 - 增加 DOCX 导出。

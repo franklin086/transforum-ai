@@ -1,3 +1,16 @@
+## Alpha 1.3.0 Technical Debt Update
+
+Time label: 2026-06-XX-TASK-014
+
+Remaining debt:
+
+- Whisper tiny Chinese accuracy remains limited for real meeting captions.
+- Laptop built-in microphones are not suitable for formal meeting validation without field testing.
+- External microphone validation is still required.
+- Whisper base/small should be evaluated for accuracy improvement.
+- Gemini Live or a dedicated streaming ASR path should be evaluated for lower latency simultaneous interpretation.
+- PCM/WAV browser capture uses ScriptProcessorNode for the minimal viable implementation; AudioWorklet should be considered later.
+
 ﻿# Technical Debt
 
 ## Alpha 1.2.4 TASK 013E Technical Debt Update

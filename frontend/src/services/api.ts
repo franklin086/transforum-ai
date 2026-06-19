@@ -121,12 +121,17 @@ export async function getTranslationStatus() {
 export async function transcribeRealtimeChunk(
   meetingId: string,
   chunkIndex: number,
-  audioBlob: Blob
+  audioBlob: Blob,
+  audioMode = "pcm_wav",
+  chunkDurationMs = 3000
 ) {
+  const extension = audioBlob.type.includes("wav") ? "wav" : "webm";
   const formData = new FormData();
   formData.append("meeting_id", meetingId);
   formData.append("chunk_index", String(chunkIndex));
-  formData.append("audio", audioBlob, `${meetingId}_chunk_${chunkIndex}.webm`);
+  formData.append("audio_mode", audioMode);
+  formData.append("chunk_duration_ms", String(chunkDurationMs));
+  formData.append("audio", audioBlob, `${meetingId}_chunk_${chunkIndex}.${extension}`);
 
   return requestJson<RealtimeTranscriptionResult>(
     "/api/realtime/transcribe-chunk",

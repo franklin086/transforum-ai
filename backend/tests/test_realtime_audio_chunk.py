@@ -116,7 +116,7 @@ class RealtimeAudioChunkTest(unittest.TestCase):
         return patch.object(
             realtime_transcription_service,
             "_recognition_audio_path",
-            side_effect=lambda _meeting_id, _chunk_index, chunk_path: (chunk_path, None),
+            side_effect=lambda _meeting_id, _chunk_index, chunk_path, _audio_mode="webm": (chunk_path, None),
         )
 
     def test_empty_chunk_is_skipped(self):
@@ -407,8 +407,8 @@ class RealtimeAudioChunkTest(unittest.TestCase):
         self.assertEqual(first["text"], "hello")
         self.assertEqual(second["text"], "welcome")
         self.assertEqual([call.args[0] for call in translate_mock.call_args_list], ["hello", "welcome"])
-        self.assertIn("[00:01:44] hello", meeting.realtime_transcript_text)
-        self.assertIn("[00:01:52] welcome", meeting.realtime_transcript_text)
+        self.assertIn("[00:00:39] hello", meeting.realtime_transcript_text)
+        self.assertIn("[00:00:42] welcome", meeting.realtime_transcript_text)
         self.assertNotIn("hello welcome", meeting.realtime_transcript_text)
 
     def test_realtime_translation_payload_uses_gemini_provider(self):
@@ -490,6 +490,50 @@ class RealtimeAudioChunkTest(unittest.TestCase):
             meeting.translation_fallback_reason,
             "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR",
         )
+
+
+    def test_wav_chunk_uses_direct_pcm_wav_recognition_path(self):
+        path = self.chunk_path("meeting_realtime_chunk_17.wav")
+        path.write_bytes(b"RIFF" + b"valid wav chunk" * 2048)
+        fake_module = self.fake_whisper_module(["pcm wav text"])
+
+        with self.installed_model_patch(), patch.object(
+            realtime_transcription_service,
+            "_is_audio_decodable",
+            return_value=(True, ""),
+        ), patch.object(
+            realtime_transcription_service,
+            "_combine_audio_window",
+        ) as combine_mock, patch.dict(sys.modules, {"faster_whisper": fake_module}), patch.object(
+            realtime_transcription_service,
+            "translate_zh_to_en",
+            return_value={
+                "success": True,
+                "provider": "gemini",
+                "source_text": "pcm wav text",
+                "translated_text": "pcm wav translated",
+                "latency_ms": 18,
+                "error": None,
+                "fallback_reason": None,
+                "translation_status": "translated",
+            },
+        ):
+            result = realtime_transcription_service.transcribe_realtime_chunk(
+                "meeting_realtime",
+                17,
+                path,
+                audio_mode="pcm_wav",
+                chunk_duration_ms=3000,
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["audio_mode"], "pcm_wav")
+        self.assertEqual(result["chunk_duration_ms"], 3000)
+        self.assertEqual(result["caption_text"], "pcm wav text")
+        self.assertEqual(result["translation_provider"], "gemini")
+        self.assertIn("asr_latency_ms", result)
+        self.assertIn("end_to_end_latency_ms", result)
+        combine_mock.assert_not_called()
 
 
 if __name__ == "__main__":

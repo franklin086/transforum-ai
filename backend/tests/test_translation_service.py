@@ -109,7 +109,7 @@ class TranslationServiceTest(unittest.TestCase):
             )
 
         self.assertEqual(translate_mock.call_count, 2)
-        sleep_mock.assert_called_once_with(0.5)
+        sleep_mock.assert_called_once_with(0.8)
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_RATE_LIMIT")

@@ -125,9 +125,14 @@ def translate_zh_to_en(text: str) -> dict:
     last_error_code = "GEMINI_API_ERROR"
 
     for attempt in range(2):
+        attempt_number = attempt + 1
+        print("[TRANSLATION_TRACE] provider=gemini", flush=True)
+        print(f"[TRANSLATION_TRACE] attempt={attempt_number}", flush=True)
         try:
             translated = _translate_with_gemini(normalized)
             latency_ms = int((time.perf_counter() - started) * 1000)
+            print("[TRANSLATION_TRACE] status=translated", flush=True)
+            print(f"[TRANSLATION_TRACE] latency_ms={latency_ms}", flush=True)
             print(f"Gemini translation latency: {latency_ms} ms")
             return {
                 "success": True,
@@ -143,11 +148,13 @@ def translate_zh_to_en(text: str) -> dict:
         except Exception as error:
             last_error_code = _classify_gemini_error(error)
             print(f"Gemini translation error: {last_error_code}: {error}")
-            if last_error_code == "GEMINI_RATE_LIMIT" and attempt == 0:
-                time.sleep(0.5)
+            if attempt == 0:
+                time.sleep(0.8)
                 continue
             break
 
     latency_ms = int((time.perf_counter() - started) * 1000)
+    print("[TRANSLATION_TRACE] status=fallback", flush=True)
+    print(f"[TRANSLATION_TRACE] latency_ms={latency_ms}", flush=True)
     print(f"Gemini translation latency: {latency_ms} ms")
     return _fallback_result(normalized, last_error_code, latency_ms)

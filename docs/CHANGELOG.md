@@ -1,3 +1,23 @@
+## Alpha 1.3.0 - Realtime Audio Engine V2
+
+Time label: 2026-06-XX-TASK-014
+
+Changed:
+
+- Realtime audio capture now prefers PCM/WAV chunks generated in the browser with Web Audio API.
+- Default realtime chunk duration reduced to 3000 ms.
+- Backend realtime transcription accepts WAV/PCM and still supports WebM fallback.
+- REALTIME_TRACE includes audio mode, duration, size, ASR latency, translation latency, end-to-end latency, and save state.
+- Gemini translation retries once after 800 ms before fallback.
+- Meeting Console includes Realtime Diagnostics.
+- Whisper model status now reports current model, available model states, active path, and recommended field-test model.
+
+Preserved:
+
+- WebM fallback path.
+- Existing Gemini fallback reason behavior.
+- Meeting Minutes archive display and fallback reason handling.
+
 ﻿# Changelog
 
 本文件记录 TransForum AI 的阶段性版本变更。

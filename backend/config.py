@@ -43,11 +43,24 @@ def get_whisper_model_dir() -> Path:
 def get_whisper_model_status() -> dict:
     model_dir = get_whisper_model_dir()
     installed = model_dir.exists() and any(model_dir.iterdir())
+    available_model_names = ["tiny", "base", "small"]
+    available_models = {
+        name: {
+            "installed": (WHISPER_MODEL_PATH / name).exists()
+            and any((WHISPER_MODEL_PATH / name).iterdir()),
+            "path": str(WHISPER_MODEL_PATH / name).replace("\\", "/"),
+        }
+        for name in available_model_names
+    }
 
     return {
         "installed": installed,
         "model": WHISPER_MODEL,
+        "current_model": WHISPER_MODEL,
         "path": str(WHISPER_MODEL_PATH).replace("\\", "/"),
         "model_path": str(model_dir).replace("\\", "/"),
+        "active_model_path": str(model_dir).replace("\\", "/"),
+        "available_models": available_models,
+        "recommended_for_field_test": "base",
         "message": "Ready" if installed else "Model not found",
     }

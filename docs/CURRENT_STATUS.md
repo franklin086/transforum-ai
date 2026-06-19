@@ -1,3 +1,22 @@
+## Alpha 1.3.0 Current Status
+
+Time label: 2026-06-XX-TASK-014
+
+Version: TransForum AI Alpha 1.3.0
+
+Status:
+
+- Realtime Audio Engine V2 implemented with PCM/WAV as the preferred browser capture mode.
+- WebM realtime capture remains as fallback when Web Audio capture is unavailable.
+- Default realtime chunk duration is reduced to 3000 ms.
+- Backend realtime chunk handling accepts WebM, WAV, and PCM/WAV modes.
+- REALTIME_TRACE now includes audio mode, chunk duration, audio size, ASR latency, translation latency, end-to-end latency, provider/status, fallback reason, and save status.
+- TRANSLATION_TRACE now records Gemini attempts, status, and latency.
+- Meeting Console shows Realtime Diagnostics.
+- Meeting Minutes remains compatible with Chinese captions, English translation, provider/status, and fallback reason.
+
+Manual browser validation is still required for the 60-second PCM realtime test.
+
 # Current Status
 
 ## 当前项目

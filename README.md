@@ -1,3 +1,14 @@
+## Alpha 1.3.0 Realtime Audio Engine V2
+
+Alpha 1.3.0 upgrades realtime caption audio capture from WebM-first chunks to PCM/WAV-first chunks.
+
+- Default realtime audio mode: PCM/WAV via Web Audio API.
+- WebM MediaRecorder remains available as browser fallback.
+- Default realtime chunk duration: about 3000 ms.
+- Realtime Diagnostics now shows audio mode, chunk duration, ASR latency, translation latency, end-to-end latency, Whisper model, provider, and fallback reason.
+- Gemini translation now retries once after 800 ms before falling back.
+- Whisper tiny remains the default local model; base and small are surfaced as future field-test directions.
+
 ﻿# TransForum AI
 
 当前版本：TransForum AI Alpha 1.2.4

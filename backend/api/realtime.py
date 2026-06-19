@@ -43,6 +43,8 @@ def _safe_provider(provider: str | None, english: str, fallback_reason: str | No
 def transcribe_chunk(
     meeting_id: str = Form(...),
     chunk_index: int = Form(...),
+    audio_mode: str = Form("pcm_wav"),
+    chunk_duration_ms: int = Form(3000),
     audio: UploadFile = File(...),
 ):
     if chunk_index < 1:
@@ -52,8 +54,14 @@ def transcribe_chunk(
     if meeting is None:
         raise HTTPException(status_code=404, detail="Meeting not found")
 
-    chunk_path = save_realtime_chunk(audio, meeting_id, chunk_index)
-    result = transcribe_realtime_chunk(meeting_id, chunk_index, chunk_path)
+    chunk_path = save_realtime_chunk(audio, meeting_id, chunk_index, audio_mode)
+    result = transcribe_realtime_chunk(
+        meeting_id,
+        chunk_index,
+        chunk_path,
+        audio_mode=audio_mode,
+        chunk_duration_ms=chunk_duration_ms,
+    )
     if not result["success"] and result.get("error") == "MEETING_NOT_FOUND":
         raise HTTPException(status_code=404, detail="Meeting not found")
 

@@ -1,6 +1,8 @@
 import asyncio
 from collections import deque
 from datetime import datetime
+import time
+import wave
 from pathlib import Path
 import hashlib
 import re
@@ -30,9 +32,9 @@ CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 TRANSCRIPTS_DIR = PROJECT_ROOT / "data" / "transcripts"
 CHUNK_ERROR_LOG = CHUNKS_DIR / "invalid_chunk_errors.log"
 MIN_CHUNK_SIZE_BYTES = 10 * 1024
-VALID_CHUNK_EXTENSIONS = {".webm", ".wav"}
+VALID_CHUNK_EXTENSIONS = {".webm", ".wav", ".pcm"}
 ROLLING_WINDOW_CHUNK_COUNT = 3
-REALTIME_CHUNK_SECONDS = 8
+REALTIME_CHUNK_SECONDS = 3
 RECENT_TEXT_HASH_LIMIT = 12
 MEETING_TEXT_STATE = {}
 
@@ -48,8 +50,9 @@ def _safe_meeting_name(meeting_id: str) -> str:
     return cleaned if cleaned.startswith("meeting_") else f"meeting_{cleaned}"
 
 
-def _format_chunk_timestamp(chunk_index: int) -> str:
-    total_seconds = max(chunk_index, 1) * REALTIME_CHUNK_SECONDS
+def _format_chunk_timestamp(chunk_index: int, chunk_duration_ms: int | None = None) -> str:
+    chunk_seconds = max(1, int((chunk_duration_ms or REALTIME_CHUNK_SECONDS * 1000) / 1000))
+    total_seconds = max(chunk_index, 1) * chunk_seconds
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60
     seconds = total_seconds % 60
@@ -179,15 +182,27 @@ def _print_realtime_trace(
     translation_status: str,
     fallback_reason: str | None,
     saved_to_minutes: bool,
+    audio_mode: str = "webm",
+    chunk_duration_ms: int = REALTIME_CHUNK_SECONDS * 1000,
+    audio_size_bytes: int = 0,
+    asr_latency_ms: int = 0,
+    translation_latency_ms: int = 0,
+    end_to_end_latency_ms: int = 0,
 ) -> None:
     trace = {
         "meeting_id": meeting_id,
         "chunk_index": chunk_index,
+        "audio_mode": audio_mode,
+        "chunk_duration_ms": chunk_duration_ms,
+        "audio_size_bytes": audio_size_bytes,
+        "asr_latency_ms": asr_latency_ms,
         "caption_text": caption_text,
         "accepted_caption": str(accepted_caption).lower(),
         "translation_attempted": str(translation_attempted).lower(),
         "translation_provider": translation_provider,
         "translation_status": translation_status,
+        "translation_latency_ms": translation_latency_ms,
+        "end_to_end_latency_ms": end_to_end_latency_ms,
         "fallback_reason": fallback_reason or "",
         "saved_to_minutes": str(saved_to_minutes).lower(),
     }
@@ -203,6 +218,10 @@ def _broadcast_subtitle_update(
     latency_ms: int,
     fallback_reason: str | None = None,
     translation_status: str = "waiting",
+    audio_mode: str = "webm",
+    chunk_duration_ms: int = REALTIME_CHUNK_SECONDS * 1000,
+    asr_latency_ms: int = 0,
+    end_to_end_latency_ms: int = 0,
 ) -> None:
     message = {
         "type": "subtitle_update",
@@ -217,6 +236,10 @@ def _broadcast_subtitle_update(
         "translation_fallback_reason": fallback_reason,
         "fallback_reason": fallback_reason,
         "gemini_configured": bool(GEMINI_API_KEY),
+        "audio_mode": audio_mode,
+        "chunk_duration_ms": chunk_duration_ms,
+        "asr_latency_ms": asr_latency_ms,
+        "end_to_end_latency_ms": end_to_end_latency_ms,
         "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),
     }
     try:
@@ -412,10 +435,26 @@ def _recognition_audio_path(
     meeting_id: str,
     chunk_index: int,
     current_chunk_path: Path,
+    audio_mode: str = "webm",
 ) -> tuple[Path | None, dict | None]:
     basic_error = _basic_chunk_error(meeting_id, chunk_index, current_chunk_path)
     if basic_error is not None:
         return None, basic_error
+
+    normalized_mode = (audio_mode or "webm").lower()
+    if normalized_mode in {"pcm_wav", "wav", "pcm"} or current_chunk_path.suffix.lower() in {".wav", ".pcm"}:
+        recognition_path = _wrap_pcm_as_wav(current_chunk_path) if current_chunk_path.suffix.lower() == ".pcm" else current_chunk_path
+        is_decodable, detail = _is_audio_decodable(recognition_path)
+        if is_decodable:
+            return recognition_path, None
+        return None, _invalid_chunk_response(
+            meeting_id,
+            chunk_index,
+            current_chunk_path,
+            "INVALID_AUDIO_CHUNK",
+            "Audio chunk is invalid or not decodable.",
+            detail,
+        )
 
     recent_paths = _recent_chunk_paths(meeting_id)
     if current_chunk_path not in recent_paths:
@@ -477,11 +516,36 @@ def _invalid_chunk_response(
     }
 
 
-def save_realtime_chunk(audio: UploadFile, meeting_id: str, chunk_index: int) -> Path:
+
+def _audio_extension(upload: UploadFile, audio_mode: str) -> str:
+    filename = (upload.filename or "").lower()
+    content_type = (upload.content_type or "").lower()
+    normalized_mode = (audio_mode or "webm").lower()
+    if normalized_mode in {"pcm_wav", "wav"} or "wav" in content_type or filename.endswith(".wav"):
+        return ".wav"
+    if normalized_mode == "pcm" or "pcm" in content_type or filename.endswith(".pcm"):
+        return ".pcm"
+    return ".webm"
+
+
+def _wrap_pcm_as_wav(pcm_path: Path) -> Path:
+    wav_path = pcm_path.with_suffix(".wav")
+    with pcm_path.open("rb") as source, wave.open(str(wav_path), "wb") as output:
+        output.setnchannels(1)
+        output.setsampwidth(2)
+        output.setframerate(16000)
+        output.writeframes(source.read())
+    return wav_path
+
+def save_realtime_chunk(
+    audio: UploadFile,
+    meeting_id: str,
+    chunk_index: int,
+    audio_mode: str = "webm",
+) -> Path:
     CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
-    chunk_path = (
-        CHUNKS_DIR / f"{_safe_meeting_name(meeting_id)}_chunk_{chunk_index}.webm"
-    )
+    extension = _audio_extension(audio, audio_mode)
+    chunk_path = CHUNKS_DIR / f"{_safe_meeting_name(meeting_id)}_chunk_{chunk_index}{extension}"
 
     with chunk_path.open("wb") as output:
         shutil.copyfileobj(audio.file, output)
@@ -494,7 +558,10 @@ def transcribe_realtime_chunk(
     meeting_id: str,
     chunk_index: int,
     chunk_path: Path,
+    audio_mode: str = "webm",
+    chunk_duration_ms: int = REALTIME_CHUNK_SECONDS * 1000,
 ) -> dict:
+    request_started = time.perf_counter()
     meeting = get_meeting(meeting_id)
     if meeting is None:
         return {
@@ -507,12 +574,43 @@ def transcribe_realtime_chunk(
     if not model_status["installed"]:
         return MODEL_NOT_FOUND_RESPONSE
 
+    audio_size_bytes = chunk_path.stat().st_size if chunk_path.exists() else 0
     recognition_path, invalid_chunk = _recognition_audio_path(
         meeting_id,
         chunk_index,
         chunk_path,
+        audio_mode,
     )
     if invalid_chunk is not None:
+        end_to_end_latency_ms = int((time.perf_counter() - request_started) * 1000)
+        invalid_chunk.update(
+            {
+                "audio_mode": audio_mode,
+                "chunk_duration_ms": chunk_duration_ms,
+                "audio_size_bytes": audio_size_bytes,
+                "asr_latency_ms": 0,
+                "translation_latency_ms": 0,
+                "end_to_end_latency_ms": end_to_end_latency_ms,
+                "fallback_reason": invalid_chunk.get("error"),
+            }
+        )
+        _print_realtime_trace(
+            meeting_id,
+            chunk_index,
+            "",
+            False,
+            False,
+            "waiting",
+            "waiting",
+            invalid_chunk.get("error"),
+            False,
+            audio_mode,
+            chunk_duration_ms,
+            audio_size_bytes,
+            0,
+            0,
+            end_to_end_latency_ms,
+        )
         return invalid_chunk
 
     try:
@@ -524,6 +622,7 @@ def transcribe_realtime_chunk(
             compute_type=WHISPER_COMPUTE_TYPE,
             local_files_only=True,
         )
+        asr_started = time.perf_counter()
         segments, _info = model.transcribe(
             str(recognition_path),
             language="zh",
@@ -531,6 +630,7 @@ def transcribe_realtime_chunk(
             vad_filter=False,
         )
         recognized_text = "".join(segment.text for segment in segments).strip()
+        asr_latency_ms = int((time.perf_counter() - asr_started) * 1000)
         text = _derive_new_transcript_text(meeting_id, meeting, recognized_text)
         transcript_path = _realtime_transcript_path(meeting_id)
 
@@ -538,7 +638,7 @@ def transcribe_realtime_chunk(
         translation_attempted = False
         saved_to_minutes = False
         if text:
-            timestamp = _format_chunk_timestamp(chunk_index)
+            timestamp = _format_chunk_timestamp(chunk_index, chunk_duration_ms)
             transcript_line = f"{timestamp} {text}"
             translation_attempted = True
             translation_result = translate_zh_to_en(text)
@@ -580,6 +680,10 @@ def transcribe_realtime_chunk(
                 translation_latency_ms,
                 translation_fallback_reason,
                 translation_status,
+                audio_mode,
+                chunk_duration_ms,
+                asr_latency_ms,
+                int((time.perf_counter() - request_started) * 1000),
             )
         else:
             english_text = ""
@@ -595,6 +699,7 @@ def transcribe_realtime_chunk(
                 "Waiting for valid speech input...",
             )
 
+        end_to_end_latency_ms = int((time.perf_counter() - request_started) * 1000)
         _print_realtime_trace(
             meeting_id,
             chunk_index,
@@ -605,6 +710,12 @@ def transcribe_realtime_chunk(
             translation_status,
             translation_fallback_reason,
             saved_to_minutes,
+            audio_mode,
+            chunk_duration_ms,
+            audio_size_bytes,
+            asr_latency_ms,
+            translation_latency_ms,
+            end_to_end_latency_ms,
         )
 
         return {
@@ -623,6 +734,11 @@ def transcribe_realtime_chunk(
             "translation_fallback_reason": translation_fallback_reason,
             "fallback_reason": translation_fallback_reason,
             "saved_to_minutes": saved_to_minutes,
+            "audio_mode": audio_mode,
+            "chunk_duration_ms": chunk_duration_ms,
+            "audio_size_bytes": audio_size_bytes,
+            "asr_latency_ms": asr_latency_ms,
+            "end_to_end_latency_ms": end_to_end_latency_ms,
             "gemini_configured": bool(GEMINI_API_KEY),
             "translation": translation_result,
             "chunk_index": chunk_index,

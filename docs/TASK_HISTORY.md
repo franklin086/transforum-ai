@@ -1,3 +1,30 @@
+## TASK 014 - Alpha 1.3.0 Realtime Audio Engine V2
+
+Time label: 2026-06-XX-TASK-014
+
+Completed changes:
+
+- Added browser PCM/WAV realtime capture using Web Audio API.
+- Kept WebM MediaRecorder as fallback.
+- Changed realtime chunk target from 8000 ms to 3000 ms.
+- Added realtime upload metadata for audio mode and chunk duration.
+- Added backend support for WAV/PCM chunk recognition while preserving WebM rolling-window behavior.
+- Expanded REALTIME_TRACE diagnostics.
+- Added one Gemini retry after 800 ms and TRANSLATION_TRACE logs.
+- Expanded Whisper model-status payload with current model, available model map, active model path, and recommended field-test model.
+- Added Realtime Diagnostics display in Meeting Console.
+- Preserved Meeting Minutes archive behavior.
+
+Verification:
+
+- python -m compileall . passed.
+- python -B -m unittest discover -s tests passed.
+- npm run build passed.
+
+Pending:
+
+- Manual browser validation for 60-second PCM/WAV realtime caption flow.
+
 ﻿# Task History
 
 本文件记录 TransForum AI 所有 Codex TASK 的执行历史。

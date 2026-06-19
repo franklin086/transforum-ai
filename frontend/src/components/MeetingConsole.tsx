@@ -14,6 +14,7 @@ import {
   transcribeRealtimeChunk,
   uploadMeetingAudio
 } from "@/services/api";
+import { createPcmWavRecorder, type PcmWavRecorder } from "@/services/audioPcmRecorder";
 import { connectRealtimeSocket } from "@/services/realtimeSocket";
 import type { Meeting } from "@/types/meeting";
 
@@ -60,7 +61,7 @@ function formatTranslationProvider(
 }
 
 const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL", "WAITING_FOR_VALID_SPEECH"]);
-const REALTIME_CHUNK_MS = 8000;
+const REALTIME_CHUNK_MS = 3000;
 
 type RealtimeDebugState = {
   accepted_caption: boolean | null;
@@ -69,6 +70,12 @@ type RealtimeDebugState = {
   translation_status: string;
   fallback_reason: string | null;
   saved_to_minutes: boolean | null;
+  audio_mode?: string;
+  chunk_duration_ms?: number;
+  audio_size_bytes?: number;
+  asr_latency_ms?: number;
+  translation_latency_ms?: number;
+  end_to_end_latency_ms?: number;
 };
 
 export function MeetingConsole() {
@@ -98,6 +105,10 @@ export function MeetingConsole() {
   const [translationProvider, setTranslationProvider] = useState("Waiting");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
   const [translationFallbackReason, setTranslationFallbackReason] = useState<string | null>(null);
+  const [audioMode, setAudioMode] = useState("PCM/WAV");
+  const [pcmFallbackReason, setPcmFallbackReason] = useState<string | null>(null);
+  const [asrLatencyMs, setAsrLatencyMs] = useState(0);
+  const [endToEndLatencyMs, setEndToEndLatencyMs] = useState(0);
   const [lastRealtimeDebug, setLastRealtimeDebug] = useState<RealtimeDebugState | null>(null);
   const [webSocketStatus, setWebSocketStatus] = useState("Disconnected");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
@@ -106,6 +117,7 @@ export function MeetingConsole() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const realtimeRecorderRef = useRef<MediaRecorder | null>(null);
+  const pcmRecorderRef = useRef<PcmWavRecorder | null>(null);
   const realtimeStreamRef = useRef<MediaStream | null>(null);
   const realtimeChunkIndexRef = useRef(0);
   const invalidChunkCountRef = useRef(0);
@@ -167,6 +179,7 @@ export function MeetingConsole() {
       }
       mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       realtimeActiveRef.current = false;
+      pcmRecorderRef.current?.stop();
       if (realtimeRecorderRef.current?.state === "recording") {
         realtimeRecorderRef.current.stop();
       }
@@ -203,6 +216,9 @@ export function MeetingConsole() {
           formatTranslationProvider(message.provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
+        setAsrLatencyMs(message.asr_latency_ms ?? 0);
+        setEndToEndLatencyMs(message.end_to_end_latency_ms ?? 0);
+        setAudioMode(message.audio_mode === "pcm_wav" ? "PCM/WAV" : "WebM fallback");
         setTranslationFallbackReason(fallbackReason);
         invalidChunkCountRef.current = 0;
         setRealtimeStatus("Captioning");
@@ -233,6 +249,9 @@ export function MeetingConsole() {
           formatTranslationProvider(result.provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(result.latency_ms ?? 0);
+        setAsrLatencyMs(result.asr_latency_ms ?? 0);
+        setEndToEndLatencyMs(result.end_to_end_latency_ms ?? 0);
+        setAudioMode(result.audio_mode === "pcm_wav" ? "PCM/WAV" : "WebM fallback");
         setTranslationFallbackReason(fallbackReason);
       } catch {
         setWebSocketStatus("Error");
@@ -301,11 +320,16 @@ export function MeetingConsole() {
     return "Ready to start";
   }
 
-  async function uploadRealtimeAudioChunk(audioBlob: Blob, chunkIndex: number) {
+  async function uploadRealtimeAudioChunk(
+    audioBlob: Blob,
+    chunkIndex: number,
+    uploadAudioMode: "pcm_wav" | "webm" = "pcm_wav"
+  ) {
     if (!meetingId || audioBlob.size === 0) {
       return;
     }
 
+    console.log(`[PCM_RECORDER] upload audio_mode=${uploadAudioMode}`);
     setRealtimeStatus("Recording and Processing...");
     setCurrentRealtimeChunk(chunkIndex);
 
@@ -313,7 +337,9 @@ export function MeetingConsole() {
       const result = await transcribeRealtimeChunk(
         meetingId,
         chunkIndex,
-        audioBlob
+        audioBlob,
+        uploadAudioMode,
+        REALTIME_CHUNK_MS
       );
       if (!result.success) {
         if (SKIPPED_CHUNK_ERRORS.has(result.error)) {
@@ -330,6 +356,12 @@ export function MeetingConsole() {
             translation_status: result.translation_status ?? "waiting",
             fallback_reason: result.fallback_reason ?? result.translation_fallback_reason ?? null,
             saved_to_minutes: result.saved_to_minutes ?? false,
+          audio_mode: result.audio_mode,
+          chunk_duration_ms: result.chunk_duration_ms,
+          audio_size_bytes: result.audio_size_bytes,
+          asr_latency_ms: result.asr_latency_ms,
+          translation_latency_ms: result.translation_latency_ms,
+          end_to_end_latency_ms: result.end_to_end_latency_ms,
           });
           return;
         }
@@ -356,6 +388,9 @@ export function MeetingConsole() {
           formatTranslationProvider(result.translation_provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(result.translation_latency_ms ?? result.latency_ms ?? 0);
+        setAsrLatencyMs(result.asr_latency_ms ?? 0);
+        setEndToEndLatencyMs(result.end_to_end_latency_ms ?? 0);
+        setAudioMode(result.audio_mode === "pcm_wav" ? "PCM/WAV" : "WebM fallback");
         setTranslationFallbackReason(fallbackReason);
         setLastRealtimeDebug({
           accepted_caption: result.accepted_caption ?? Boolean(text),
@@ -364,6 +399,12 @@ export function MeetingConsole() {
           translation_status: result.translation_status ?? "waiting",
           fallback_reason: fallbackReason,
           saved_to_minutes: result.saved_to_minutes ?? null,
+          audio_mode: result.audio_mode,
+          chunk_duration_ms: result.chunk_duration_ms,
+          audio_size_bytes: result.audio_size_bytes,
+          asr_latency_ms: result.asr_latency_ms,
+          translation_latency_ms: result.translation_latency_ms,
+          end_to_end_latency_ms: result.end_to_end_latency_ms,
         });
         invalidChunkCountRef.current = 0;
         setRealtimeTranscript((current) =>
@@ -398,39 +439,63 @@ export function MeetingConsole() {
         audio: true,
         video: false
       });
-      const mimeType = getSupportedMimeType();
-      const recorder = new MediaRecorder(
-        stream,
-        mimeType ? { mimeType } : undefined
-      );
-
       realtimeChunkIndexRef.current = 0;
       invalidChunkCountRef.current = 0;
       realtimeActiveRef.current = true;
       realtimeStreamRef.current = stream;
-      realtimeRecorderRef.current = recorder;
 
-      recorder.ondataavailable = (event) => {
-        if (!realtimeActiveRef.current || event.data.size === 0) {
-          return;
-        }
-        realtimeChunkIndexRef.current += 1;
-        void uploadRealtimeAudioChunk(
-          new Blob([event.data], { type: recorder.mimeType || "audio/webm" }),
-          realtimeChunkIndexRef.current
-        );
-      };
-
-      recorder.onstop = () => {
-        realtimeActiveRef.current = false;
-        setIsRealtimeCaptioning(false);
-        setRealtimeStatus("Stopped");
-        stream.getTracks().forEach((track) => track.stop());
+      try {
+        console.log("[PCM_RECORDER] initializing");
+        const pcmRecorder = await createPcmWavRecorder({
+          stream,
+          chunkDurationMs: REALTIME_CHUNK_MS,
+          onChunk: ({ blob }) => {
+            if (!realtimeActiveRef.current || blob.size === 0) {
+              return;
+            }
+            realtimeChunkIndexRef.current += 1;
+            void uploadRealtimeAudioChunk(blob, realtimeChunkIndexRef.current, "pcm_wav");
+          },
+        });
+        pcmRecorderRef.current = pcmRecorder;
         realtimeRecorderRef.current = null;
-        realtimeStreamRef.current = null;
-      };
+        setAudioMode("PCM/WAV");
+        setPcmFallbackReason(null);
+      } catch (pcmError) {
+        const reason = pcmError instanceof Error ? pcmError.message : String(pcmError);
+        console.log(`[PCM_RECORDER] fallback_to_webm reason=${reason}`);
+        setPcmFallbackReason(reason);
+        const mimeType = getSupportedMimeType();
+        const recorder = new MediaRecorder(
+          stream,
+          mimeType ? { mimeType } : undefined
+        );
+        realtimeRecorderRef.current = recorder;
+        setAudioMode("WebM fallback");
 
-      recorder.start(REALTIME_CHUNK_MS);
+        recorder.ondataavailable = (event) => {
+          if (!realtimeActiveRef.current || event.data.size === 0) {
+            return;
+          }
+          realtimeChunkIndexRef.current += 1;
+          void uploadRealtimeAudioChunk(
+            new Blob([event.data], { type: recorder.mimeType || "audio/webm" }),
+            realtimeChunkIndexRef.current,
+            "webm"
+          );
+        };
+
+        recorder.onstop = () => {
+          realtimeActiveRef.current = false;
+          setIsRealtimeCaptioning(false);
+          setRealtimeStatus("Stopped");
+          stream.getTracks().forEach((track) => track.stop());
+          realtimeRecorderRef.current = null;
+          realtimeStreamRef.current = null;
+        };
+
+        recorder.start(REALTIME_CHUNK_MS);
+      }
       setIsRealtimeCaptioning(true);
       setRealtimeStatus("Listening...");
       setCurrentRealtimeChunk(0);
@@ -438,6 +503,9 @@ export function MeetingConsole() {
       setCurrentTranslation("");
       setTranslationProvider("Waiting");
       setTranslationFallbackReason(null);
+      setPcmFallbackReason(null);
+      setAsrLatencyMs(0);
+      setEndToEndLatencyMs(0);
     } catch {
       setRealtimeStatus("Microphone Permission Denied");
       setError("Could not access microphone for realtime captions.");
@@ -446,6 +514,8 @@ export function MeetingConsole() {
 
   function handleStopRealtimeCaption() {
     realtimeActiveRef.current = false;
+    pcmRecorderRef.current?.stop();
+    pcmRecorderRef.current = null;
     if (realtimeRecorderRef.current?.state === "recording") {
       realtimeRecorderRef.current.stop();
     }
@@ -776,9 +846,17 @@ export function MeetingConsole() {
                 Mock Fallback Reason: {translationFallbackReason}
               </p>
             ) : null}
-            <p className="mt-2 text-sm font-semibold text-slate-700">
-              Latency: {translationLatencyMs} ms
-            </p>
+            <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+              <p className="font-semibold text-slate-800">Realtime Diagnostics</p>
+              <p>Audio Mode: {audioMode}</p>
+              <p>Chunk Duration: {REALTIME_CHUNK_MS} ms</p>
+              <p>ASR Latency: {asrLatencyMs} ms</p>
+              <p>Translation Latency: {translationLatencyMs} ms</p>
+              <p>End-to-End Latency: {endToEndLatencyMs} ms</p>
+              <p>Whisper Model: {whisperStatus}</p>
+              <p>Translation Provider: {translationProvider}</p>
+              <p>Fallback Reason: {pcmFallbackReason || translationFallbackReason || ""}</p>
+            </div>
             {lastRealtimeDebug ? (
               <div className="mt-4 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
                 <p className="font-semibold text-slate-700">Realtime Debug</p>

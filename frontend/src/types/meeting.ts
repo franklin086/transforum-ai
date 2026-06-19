@@ -48,8 +48,12 @@ export type TranscriptionResult = {
 export type WhisperModelStatus = {
   installed: boolean;
   model: string;
+  current_model?: string;
   path: string;
   model_path?: string;
+  active_model_path?: string;
+  available_models?: Record<string, { installed: boolean; path: string }>;
+  recommended_for_field_test?: string;
   message: string;
 };
 
@@ -70,6 +74,11 @@ export type RealtimeTranscriptionResult =
       translation_fallback_reason?: string | null;
       fallback_reason?: string | null;
       gemini_configured?: boolean;
+      audio_mode?: string;
+      chunk_duration_ms?: number;
+      audio_size_bytes?: number;
+      asr_latency_ms?: number;
+      end_to_end_latency_ms?: number;
       translation?: {
         success: boolean;
         provider: string;
@@ -97,6 +106,12 @@ export type RealtimeTranscriptionResult =
       translation_fallback_reason?: string | null;
       fallback_reason?: string | null;
       saved_to_minutes?: boolean;
+      audio_mode?: string;
+      chunk_duration_ms?: number;
+      audio_size_bytes?: number;
+      asr_latency_ms?: number;
+      translation_latency_ms?: number;
+      end_to_end_latency_ms?: number;
     };
 
 export type RealtimeTranscriptResult = {
@@ -119,6 +134,10 @@ export type RealtimeBilingualResult = {
   translation_text?: string;
   fallback_reason?: string | null;
   latency_ms?: number;
+  audio_mode?: string;
+  chunk_duration_ms?: number;
+  asr_latency_ms?: number;
+  end_to_end_latency_ms?: number;
   updated_at: string;
 };
 

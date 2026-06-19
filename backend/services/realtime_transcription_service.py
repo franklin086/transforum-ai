@@ -3,6 +3,7 @@ from datetime import datetime
 from pathlib import Path
 import re
 import shutil
+import subprocess
 
 from fastapi import UploadFile
 
@@ -24,6 +25,9 @@ from websocket.connection_manager import manager
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 CHUNKS_DIR = PROJECT_ROOT / "data" / "chunks"
 TRANSCRIPTS_DIR = PROJECT_ROOT / "data" / "transcripts"
+CHUNK_ERROR_LOG = CHUNKS_DIR / "invalid_chunk_errors.log"
+MIN_CHUNK_SIZE_BYTES = 10 * 1024
+VALID_CHUNK_EXTENSIONS = {".webm", ".wav"}
 
 MODEL_NOT_FOUND_RESPONSE = {
     "success": False,
@@ -71,6 +75,148 @@ def _broadcast_subtitle_update(
         print(f"WebSocket subtitle broadcast failed: {error}")
 
 
+def _broadcast_chunk_status(
+    meeting_id: str,
+    chunk_index: int,
+    error_code: str,
+    message: str,
+) -> None:
+    status_message = {
+        "type": "chunk_status",
+        "meeting_id": meeting_id,
+        "chunk_index": chunk_index,
+        "error": error_code,
+        "message": message,
+        "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),
+    }
+    try:
+        asyncio.run(manager.broadcast(meeting_id, status_message))
+    except Exception as error:
+        print(f"WebSocket chunk status broadcast failed: {error}")
+
+
+def _record_invalid_chunk(
+    meeting_id: str,
+    chunk_index: int,
+    chunk_path: Path,
+    error_code: str,
+    message: str,
+    detail: str = "",
+) -> None:
+    CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
+    log_line = (
+        f"{datetime.utcnow().replace(microsecond=0).isoformat()} "
+        f"meeting_id={meeting_id} chunk_index={chunk_index} "
+        f"error={error_code} file={chunk_path} message={message}"
+    )
+    if detail:
+        log_line = f"{log_line} detail={detail}"
+    with CHUNK_ERROR_LOG.open("a", encoding="utf-8") as output:
+        output.write(f"{log_line}\n")
+
+
+def _is_audio_decodable(chunk_path: Path) -> tuple[bool, str]:
+    try:
+        completed = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a:0",
+                "-show_entries",
+                "stream=codec_type",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                str(chunk_path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError) as error:
+        return False, str(error)
+
+    if completed.returncode != 0:
+        return False, (completed.stderr or completed.stdout).strip()
+
+    return "audio" in completed.stdout.lower(), completed.stderr.strip()
+
+
+def _invalid_chunk_response(
+    meeting_id: str,
+    chunk_index: int,
+    chunk_path: Path,
+    error_code: str,
+    message: str,
+    detail: str = "",
+) -> dict:
+    _record_invalid_chunk(
+        meeting_id,
+        chunk_index,
+        chunk_path,
+        error_code,
+        message,
+        detail,
+    )
+    _broadcast_chunk_status(meeting_id, chunk_index, error_code, message)
+    return {
+        "success": False,
+        "error": error_code,
+        "message": message,
+        "chunk_index": chunk_index,
+    }
+
+
+def _validate_chunk(
+    meeting_id: str,
+    chunk_index: int,
+    chunk_path: Path,
+) -> dict | None:
+    if not chunk_path.exists():
+        return _invalid_chunk_response(
+            meeting_id,
+            chunk_index,
+            chunk_path,
+            "CHUNK_NOT_FOUND",
+            "Audio chunk file was not found.",
+        )
+
+    if chunk_path.suffix.lower() not in VALID_CHUNK_EXTENSIONS:
+        return _invalid_chunk_response(
+            meeting_id,
+            chunk_index,
+            chunk_path,
+            "INVALID_CHUNK_EXTENSION",
+            "Audio chunk extension is not supported.",
+        )
+
+    chunk_size = chunk_path.stat().st_size
+    if chunk_size < MIN_CHUNK_SIZE_BYTES:
+        return _invalid_chunk_response(
+            meeting_id,
+            chunk_index,
+            chunk_path,
+            "CHUNK_TOO_SMALL",
+            "Audio chunk is too small, skipped.",
+            f"size={chunk_size}",
+        )
+
+    is_decodable, detail = _is_audio_decodable(chunk_path)
+    if not is_decodable:
+        return _invalid_chunk_response(
+            meeting_id,
+            chunk_index,
+            chunk_path,
+            "INVALID_AUDIO_CHUNK",
+            "Audio chunk is invalid or not decodable.",
+            detail,
+        )
+
+    return None
+
+
 def save_realtime_chunk(audio: UploadFile, meeting_id: str, chunk_index: int) -> Path:
     CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
     chunk_path = (
@@ -100,6 +246,10 @@ def transcribe_realtime_chunk(
     model_status = get_whisper_model_status()
     if not model_status["installed"]:
         return MODEL_NOT_FOUND_RESPONSE
+
+    invalid_chunk = _validate_chunk(meeting_id, chunk_index, chunk_path)
+    if invalid_chunk is not None:
+        return invalid_chunk
 
     try:
         from faster_whisper import WhisperModel
@@ -171,9 +321,19 @@ def transcribe_realtime_chunk(
             "transcript_file": str(transcript_path).replace("\\", "/"),
         }
     except Exception as error:
+        error_message = str(error)
+        if "Invalid data found when processing input" in error_message:
+            return _invalid_chunk_response(
+                meeting_id,
+                chunk_index,
+                chunk_path,
+                "INVALID_AUDIO_CHUNK",
+                "Audio chunk is invalid or not decodable.",
+                error_message,
+            )
         return {
             "success": False,
             "error": "TRANSCRIPTION_FAILED",
-            "message": str(error),
+            "message": error_message,
             "chunk_index": chunk_index,
         }

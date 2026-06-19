@@ -14,7 +14,16 @@ export type SubtitleUpdateMessage = {
   timestamp: string;
 };
 
-type RealtimeMessage = SubtitleUpdateMessage;
+export type ChunkStatusMessage = {
+  type: "chunk_status";
+  meeting_id: string;
+  chunk_index: number;
+  error: "INVALID_AUDIO_CHUNK" | "CHUNK_TOO_SMALL" | string;
+  message: string;
+  timestamp: string;
+};
+
+type RealtimeMessage = SubtitleUpdateMessage | ChunkStatusMessage;
 
 const WS_BASE_URL =
   process.env.NEXT_PUBLIC_WS_BASE_URL ?? "ws://localhost:8000";
@@ -41,7 +50,7 @@ export function connectRealtimeSocket(
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data) as RealtimeMessage;
-        if (message.type === "subtitle_update") {
+        if (message.type === "subtitle_update" || message.type === "chunk_status") {
           onMessage(message);
         }
       } catch {

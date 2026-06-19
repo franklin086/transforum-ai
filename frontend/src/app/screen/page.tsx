@@ -13,13 +13,28 @@ function extractRecentLines(chinese: string, english: string) {
     .slice(-5);
 }
 
+function formatTranslationProvider(provider?: string | null, english?: string | null) {
+  if (!english?.trim()) {
+    return "Waiting";
+  }
+  if (provider === "gemini") {
+    return "Gemini";
+  }
+  if (provider === "mock") {
+    return "Mock Fallback";
+  }
+  return "Waiting";
+}
+
+const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL"]);
+
 function ScreenContent() {
   const searchParams = useSearchParams();
   const meetingId = searchParams.get("meeting_id");
   const [meetingName, setMeetingName] = useState("");
   const [chineseCaption, setChineseCaption] = useState("");
   const [englishCaption, setEnglishCaption] = useState("");
-  const [translationProvider, setTranslationProvider] = useState("Mock");
+  const [translationProvider, setTranslationProvider] = useState("Waiting");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
   const [realtimeMode, setRealtimeMode] = useState("Polling Fallback");
   const [updatedAt, setUpdatedAt] = useState("");
@@ -52,9 +67,19 @@ function ScreenContent() {
     return connectRealtimeSocket(
       meetingId,
       (message) => {
+        if (message.type === "chunk_status") {
+          if (SKIPPED_CHUNK_ERRORS.has(message.error)) {
+            setStatus("Waiting for next valid audio...");
+            setUpdatedAt(message.timestamp);
+          }
+          return;
+        }
+
         setChineseCaption(message.chinese);
         setEnglishCaption(message.english);
-        setTranslationProvider(message.provider === "gemini" ? "Gemini" : "Mock");
+        setTranslationProvider(
+          formatTranslationProvider(message.provider, message.english)
+        );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
         setUpdatedAt(message.timestamp);
         setStatus("Live");
@@ -81,15 +106,21 @@ function ScreenContent() {
         if (!isActive) {
           return;
         }
-        setChineseCaption(result.chinese);
-        setEnglishCaption(result.english);
-        setTranslationProvider(result.provider === "gemini" ? "Gemini" : "Mock");
+        if (result.chinese) {
+          setChineseCaption(result.chinese);
+        }
+        if (result.english) {
+          setEnglishCaption(result.english);
+        }
+        setTranslationProvider(
+          formatTranslationProvider(result.provider, result.english)
+        );
         setTranslationLatencyMs(result.latency_ms ?? 0);
         setUpdatedAt(result.updated_at ?? "");
-        setStatus(result.chinese || result.english ? "Live" : "No bilingual subtitles yet");
+        setStatus(result.chinese || result.english ? "Live" : "Waiting for next valid audio...");
       } catch {
         if (isActive) {
-          setStatus("Bilingual subtitles unavailable");
+          setStatus("Waiting for next valid audio...");
         }
       }
     }

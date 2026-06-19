@@ -35,6 +35,21 @@ function latestLineWithoutTimestamp(text?: string | null) {
   return latestLine.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "");
 }
 
+function formatTranslationProvider(provider?: string | null, english?: string | null) {
+  if (!english?.trim()) {
+    return "Waiting";
+  }
+  if (provider === "gemini") {
+    return "Gemini";
+  }
+  if (provider === "mock") {
+    return "Mock Fallback";
+  }
+  return "Waiting";
+}
+
+const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL"]);
+
 export function MeetingConsole() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,7 +74,7 @@ export function MeetingConsole() {
   const [currentRealtimeChunk, setCurrentRealtimeChunk] = useState(0);
   const [latestRealtimeText, setLatestRealtimeText] = useState("");
   const [currentTranslation, setCurrentTranslation] = useState("");
-  const [translationProvider, setTranslationProvider] = useState("Mock Fallback");
+  const [translationProvider, setTranslationProvider] = useState("Waiting");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
   const [webSocketStatus, setWebSocketStatus] = useState("Disconnected");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
@@ -70,6 +85,7 @@ export function MeetingConsole() {
   const realtimeRecorderRef = useRef<MediaRecorder | null>(null);
   const realtimeStreamRef = useRef<MediaStream | null>(null);
   const realtimeChunkIndexRef = useRef(0);
+  const invalidChunkCountRef = useRef(0);
   const realtimeActiveRef = useRef(false);
   const chunksRef = useRef<BlobPart[]>([]);
   const timerRef = useRef<number | null>(null);
@@ -89,13 +105,12 @@ export function MeetingConsole() {
         setTranscriptPreview(result.meeting.transcript_text?.slice(0, 500) ?? "");
         setTranscriptFile(result.meeting.transcript_file ?? null);
         setRealtimeTranscript(result.meeting.realtime_transcript_text ?? "");
-        setCurrentTranslation(
-          latestLineWithoutTimestamp(result.meeting.english_transcript_text)
+        const latestEnglish = latestLineWithoutTimestamp(
+          result.meeting.english_transcript_text
         );
+        setCurrentTranslation(latestEnglish);
         setTranslationProvider(
-          result.meeting.translation_provider === "gemini"
-            ? "Gemini"
-            : "Mock Fallback"
+          formatTranslationProvider(result.meeting.translation_provider, latestEnglish)
         );
         setTranslationLatencyMs(result.meeting.translation_latency_ms ?? 0);
         setError(null);
@@ -142,12 +157,26 @@ export function MeetingConsole() {
     return connectRealtimeSocket(
       meetingId,
       (message) => {
+        if (message.type === "chunk_status") {
+          if (SKIPPED_CHUNK_ERRORS.has(message.error)) {
+            invalidChunkCountRef.current += 1;
+            setCurrentRealtimeChunk(message.chunk_index);
+            setRealtimeStatus(
+              invalidChunkCountRef.current >= 3
+                ? "Microphone input unstable. Please check microphone permission or try external microphone."
+                : "Skipped invalid audio chunk, waiting for next valid audio."
+            );
+          }
+          return;
+        }
+
         setLatestRealtimeText(message.chinese);
         setCurrentTranslation(message.english);
         setTranslationProvider(
-          message.provider === "gemini" ? "Gemini" : "Mock Fallback"
+          formatTranslationProvider(message.provider, message.english)
         );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
+        invalidChunkCountRef.current = 0;
         setRealtimeStatus("Captioning");
       },
       setWebSocketStatus
@@ -171,7 +200,7 @@ export function MeetingConsole() {
         setLatestRealtimeText(result.chinese);
         setCurrentTranslation(result.english);
         setTranslationProvider(
-          result.provider === "gemini" ? "Gemini" : "Mock Fallback"
+          formatTranslationProvider(result.provider, result.english)
         );
         setTranslationLatencyMs(result.latency_ms ?? 0);
       } catch {
@@ -256,6 +285,16 @@ export function MeetingConsole() {
         audioBlob
       );
       if (!result.success) {
+        if (SKIPPED_CHUNK_ERRORS.has(result.error)) {
+          invalidChunkCountRef.current += 1;
+          setRealtimeStatus(
+            invalidChunkCountRef.current >= 3
+              ? "Microphone input unstable. Please check microphone permission or try external microphone."
+              : "Skipped invalid audio chunk, waiting for next valid audio."
+          );
+          return;
+        }
+
         setRealtimeStatus("Transcription Failed");
         setError(result.message);
         return;
@@ -267,9 +306,10 @@ export function MeetingConsole() {
         setLatestRealtimeText(text);
         setCurrentTranslation(result.english_text?.trim() ?? "");
         setTranslationProvider(
-          result.translation_provider === "gemini" ? "Gemini" : "Mock Fallback"
+          formatTranslationProvider(result.translation_provider, result.english_text)
         );
         setTranslationLatencyMs(result.translation_latency_ms ?? 0);
+        invalidChunkCountRef.current = 0;
         setRealtimeTranscript((current) =>
           current ? `${current}\n${line}` : line
         );
@@ -302,6 +342,7 @@ export function MeetingConsole() {
       );
 
       realtimeChunkIndexRef.current = 0;
+      invalidChunkCountRef.current = 0;
       realtimeActiveRef.current = true;
       realtimeStreamRef.current = stream;
       realtimeRecorderRef.current = recorder;
@@ -332,6 +373,7 @@ export function MeetingConsole() {
       setCurrentRealtimeChunk(0);
       setLatestRealtimeText("");
       setCurrentTranslation("");
+      setTranslationProvider("Waiting");
     } catch {
       setRealtimeStatus("Microphone Permission Denied");
       setError("Could not access microphone for realtime captions.");
@@ -539,11 +581,11 @@ export function MeetingConsole() {
     );
   }
 
-  if (error || !meeting) {
+  if (!meeting) {
     return (
       <section className="mt-8 rounded-lg border border-slate-200 bg-white p-8">
         <h2 className="text-2xl font-bold">Meeting unavailable</h2>
-        <p className="mt-3 text-red-700">{error}</p>
+        <p className="mt-3 text-red-700">{error ?? "Meeting not found."}</p>
         <Link
           className="mt-6 inline-flex rounded-lg bg-meeting-blue px-5 py-3 text-sm font-semibold text-white"
           href="/meeting/new"

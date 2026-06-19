@@ -2,6 +2,27 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2.2-hotfix
+
+时间标签：2026-06-XX-TASK-013B
+
+里程碑：Realtime Audio Stability Hotfix
+
+变更：
+
+- 前端实时录音 chunk 从 3 秒调整为 8 秒。
+- 后端为每个 meeting 使用最近 3 个有效 chunk 构造 rolling audio window。
+- rolling window 合并失败时回退到当前有效 chunk，不中断会议。
+- 无效 chunk 提示改为 `Waiting for valid speech input...`，连续 5 次后才提示 microphone unstable。
+- 新增 `GET /api/translation/status`，检查 Gemini API Key、provider 和模型名，不返回 Key 明文。
+- Translation 初始状态继续保持 `Waiting`。
+
+技术债务：
+
+- 长期应改为 WAV/PCM 音频输入。
+- 长期应使用更稳定的音频流处理方案。
+- 笔记本内置麦克风识别仍需现场验证。
+
 ## TransForum AI Alpha 1.2.2
 
 时间标签：2026-06-09-TASK-014A

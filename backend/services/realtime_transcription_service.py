@@ -28,6 +28,8 @@ TRANSCRIPTS_DIR = PROJECT_ROOT / "data" / "transcripts"
 CHUNK_ERROR_LOG = CHUNKS_DIR / "invalid_chunk_errors.log"
 MIN_CHUNK_SIZE_BYTES = 10 * 1024
 VALID_CHUNK_EXTENSIONS = {".webm", ".wav"}
+ROLLING_WINDOW_CHUNK_COUNT = 3
+REALTIME_CHUNK_SECONDS = 8
 
 MODEL_NOT_FOUND_RESPONSE = {
     "success": False,
@@ -42,7 +44,7 @@ def _safe_meeting_name(meeting_id: str) -> str:
 
 
 def _format_chunk_timestamp(chunk_index: int) -> str:
-    total_seconds = max(chunk_index, 1) * 3
+    total_seconds = max(chunk_index, 1) * REALTIME_CHUNK_SECONDS
     hours = total_seconds // 3600
     minutes = (total_seconds % 3600) // 60
     seconds = total_seconds % 60
@@ -144,32 +146,84 @@ def _is_audio_decodable(chunk_path: Path) -> tuple[bool, str]:
     return "audio" in completed.stdout.lower(), completed.stderr.strip()
 
 
-def _invalid_chunk_response(
+def _chunk_index_from_path(chunk_path: Path) -> int:
+    match = re.search(r"_chunk_(\d+)", chunk_path.stem)
+    return int(match.group(1)) if match else 0
+
+
+def _recent_chunk_paths(meeting_id: str) -> list[Path]:
+    safe_name = _safe_meeting_name(meeting_id)
+    paths = [
+        path
+        for path in CHUNKS_DIR.glob(f"{safe_name}_chunk_*.webm")
+        if path.exists()
+        and not path.stem.endswith("_window")
+        and path.suffix.lower() in VALID_CHUNK_EXTENSIONS
+        and path.stat().st_size >= MIN_CHUNK_SIZE_BYTES
+    ]
+    return sorted(paths, key=_chunk_index_from_path)[-ROLLING_WINDOW_CHUNK_COUNT:]
+
+
+def _concat_list_path(meeting_id: str, chunk_index: int) -> Path:
+    return CHUNKS_DIR / f"{_safe_meeting_name(meeting_id)}_chunk_{chunk_index}_window.txt"
+
+
+def _audio_window_path(meeting_id: str, chunk_index: int) -> Path:
+    return CHUNKS_DIR / f"{_safe_meeting_name(meeting_id)}_chunk_{chunk_index}_window.webm"
+
+
+def _write_concat_list(list_path: Path, chunk_paths: list[Path]) -> None:
+    def escape_path(path: Path) -> str:
+        return path.resolve().as_posix().replace("'", "'\\''")
+
+    lines = [f"file '{escape_path(path)}'" for path in chunk_paths]
+    list_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _combine_audio_window(
     meeting_id: str,
     chunk_index: int,
-    chunk_path: Path,
-    error_code: str,
-    message: str,
-    detail: str = "",
-) -> dict:
-    _record_invalid_chunk(
-        meeting_id,
-        chunk_index,
-        chunk_path,
-        error_code,
-        message,
-        detail,
-    )
-    _broadcast_chunk_status(meeting_id, chunk_index, error_code, message)
-    return {
-        "success": False,
-        "error": error_code,
-        "message": message,
-        "chunk_index": chunk_index,
-    }
+    chunk_paths: list[Path],
+) -> tuple[Path | None, str]:
+    if len(chunk_paths) < 2:
+        return (chunk_paths[0], "") if chunk_paths else (None, "No chunk files available.")
+
+    list_path = _concat_list_path(meeting_id, chunk_index)
+    output_path = _audio_window_path(meeting_id, chunk_index)
+    _write_concat_list(list_path, chunk_paths)
+
+    try:
+        completed = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-v",
+                "error",
+                "-f",
+                "concat",
+                "-safe",
+                "0",
+                "-i",
+                str(list_path),
+                "-c",
+                "copy",
+                str(output_path),
+            ],
+            capture_output=True,
+            text=True,
+            timeout=20,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError) as error:
+        return None, str(error)
+
+    if completed.returncode != 0 or not output_path.exists():
+        return None, (completed.stderr or completed.stdout).strip()
+
+    return output_path, ""
 
 
-def _validate_chunk(
+def _basic_chunk_error(
     meeting_id: str,
     chunk_index: int,
     chunk_path: Path,
@@ -203,18 +257,76 @@ def _validate_chunk(
             f"size={chunk_size}",
         )
 
-    is_decodable, detail = _is_audio_decodable(chunk_path)
-    if not is_decodable:
-        return _invalid_chunk_response(
-            meeting_id,
-            chunk_index,
-            chunk_path,
-            "INVALID_AUDIO_CHUNK",
-            "Audio chunk is invalid or not decodable.",
-            detail,
-        )
-
     return None
+
+
+def _recognition_audio_path(
+    meeting_id: str,
+    chunk_index: int,
+    current_chunk_path: Path,
+) -> tuple[Path | None, dict | None]:
+    basic_error = _basic_chunk_error(meeting_id, chunk_index, current_chunk_path)
+    if basic_error is not None:
+        return None, basic_error
+
+    recent_paths = _recent_chunk_paths(meeting_id)
+    if current_chunk_path not in recent_paths:
+        recent_paths.append(current_chunk_path)
+        recent_paths = sorted(recent_paths, key=_chunk_index_from_path)[
+            -ROLLING_WINDOW_CHUNK_COUNT:
+        ]
+
+    window_path, combine_detail = _combine_audio_window(
+        meeting_id,
+        chunk_index,
+        recent_paths,
+    )
+    if window_path is not None:
+        is_decodable, detail = _is_audio_decodable(window_path)
+        if is_decodable:
+            return window_path, None
+        combine_detail = detail or combine_detail
+
+    current_detail = ""
+    if window_path != current_chunk_path:
+        current_is_decodable, current_detail = _is_audio_decodable(current_chunk_path)
+        if current_is_decodable:
+            return current_chunk_path, None
+
+    detail = combine_detail or current_detail
+    return None, _invalid_chunk_response(
+        meeting_id,
+        chunk_index,
+        current_chunk_path,
+        "INVALID_AUDIO_CHUNK",
+        "Audio chunk is invalid or not decodable.",
+        detail,
+    )
+
+
+def _invalid_chunk_response(
+    meeting_id: str,
+    chunk_index: int,
+    chunk_path: Path,
+    error_code: str,
+    message: str,
+    detail: str = "",
+) -> dict:
+    _record_invalid_chunk(
+        meeting_id,
+        chunk_index,
+        chunk_path,
+        error_code,
+        message,
+        detail,
+    )
+    _broadcast_chunk_status(meeting_id, chunk_index, error_code, message)
+    return {
+        "success": False,
+        "error": error_code,
+        "message": message,
+        "chunk_index": chunk_index,
+    }
 
 
 def save_realtime_chunk(audio: UploadFile, meeting_id: str, chunk_index: int) -> Path:
@@ -247,7 +359,11 @@ def transcribe_realtime_chunk(
     if not model_status["installed"]:
         return MODEL_NOT_FOUND_RESPONSE
 
-    invalid_chunk = _validate_chunk(meeting_id, chunk_index, chunk_path)
+    recognition_path, invalid_chunk = _recognition_audio_path(
+        meeting_id,
+        chunk_index,
+        chunk_path,
+    )
     if invalid_chunk is not None:
         return invalid_chunk
 
@@ -261,7 +377,7 @@ def transcribe_realtime_chunk(
             local_files_only=True,
         )
         segments, _info = model.transcribe(
-            str(chunk_path),
+            str(recognition_path),
             language="zh",
             task="transcribe",
             vad_filter=False,
@@ -318,6 +434,7 @@ def transcribe_realtime_chunk(
             "translation": translation_result,
             "chunk_index": chunk_index,
             "chunk_file": str(chunk_path).replace("\\", "/"),
+            "recognition_file": str(recognition_path).replace("\\", "/"),
             "transcript_file": str(transcript_path).replace("\\", "/"),
         }
     except Exception as error:

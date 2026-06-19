@@ -7,6 +7,7 @@ import type {
   RealtimeTranscriptionResult,
   RealtimeTranscriptResult,
   TranscriptionResult,
+  TranslationStatus,
   WhisperModelStatus
 } from "@/types/meeting";
 
@@ -111,6 +112,10 @@ export async function getTranscription(meetingId: string) {
 
 export async function getWhisperModelStatus() {
   return requestJson<WhisperModelStatus>("/api/transcription/model-status");
+}
+
+export async function getTranslationStatus() {
+  return requestJson<TranslationStatus>("/api/translation/status");
 }
 
 export async function transcribeRealtimeChunk(

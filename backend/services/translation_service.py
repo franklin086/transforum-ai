@@ -90,6 +90,15 @@ def _fallback_result(source_text: str, error_code: str, latency_ms: int = 0) -> 
     }
 
 
+def get_translation_status() -> dict:
+    configured = bool(GEMINI_API_KEY)
+    return {
+        "gemini_api_key_configured": configured,
+        "provider": "gemini" if configured else "mock",
+        "model": GEMINI_TRANSLATION_MODEL if configured else None,
+    }
+
+
 def translate_zh_to_en(text: str) -> dict:
     """Translate Chinese meeting subtitles to English with Gemini fallback."""
     normalized = text.strip()
@@ -124,6 +133,7 @@ def translate_zh_to_en(text: str) -> dict:
             }
         except Exception as error:
             last_error_code = _classify_gemini_error(error)
+            print(f"Gemini translation error: {last_error_code}: {error}")
             if last_error_code == "GEMINI_RATE_LIMIT" and attempt == 0:
                 time.sleep(0.5)
                 continue

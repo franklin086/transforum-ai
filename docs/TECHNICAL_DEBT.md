@@ -1,5 +1,23 @@
 # Technical Debt
 
+## Alpha 1.2.2-hotfix Technical Debt Update
+
+时间标签：2026-06-XX-TASK-013B
+
+开发版本号：TransForum AI Alpha 1.2.2-hotfix
+
+当前债务总数：30
+
+新增债务：
+
+- [DEBT-032] 长期应改为 WAV/PCM 音频输入。
+- [DEBT-033] 长期应使用更稳定的音频流处理方案。
+- [DEBT-034] 笔记本内置麦克风识别仍需现场验证。
+
+已解决债务：
+
+- 无。
+
 ## Alpha 1.2.2 Current Technical Debt Update
 
 时间标签：2026-06-09-TASK-014A

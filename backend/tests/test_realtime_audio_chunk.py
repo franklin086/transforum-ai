@@ -1,7 +1,8 @@
 import sys
-import tempfile
+import shutil
 import types
 import unittest
+from uuid import uuid4
 from pathlib import Path
 from unittest.mock import patch
 
@@ -13,11 +14,8 @@ from services import realtime_transcription_service
 
 class RealtimeAudioChunkTest(unittest.TestCase):
     def setUp(self):
-        self.temp_dir = tempfile.TemporaryDirectory(
-            dir="C:\\tmp",
-            ignore_cleanup_errors=True,
-        )
-        self.root = Path(self.temp_dir.name)
+        self.root = Path(__file__).resolve().parents[1] / ".test-tmp" / uuid4().hex
+        self.root.mkdir(parents=True, exist_ok=True)
         data_dir = self.root / "data"
         self.data_dir_patch = patch.object(db_connection, "DATA_DIR", data_dir)
         self.db_path_patch = patch.object(
@@ -50,7 +48,7 @@ class RealtimeAudioChunkTest(unittest.TestCase):
         self.chunks_dir_patch.stop()
         self.db_path_patch.stop()
         self.data_dir_patch.stop()
-        self.temp_dir.cleanup()
+        shutil.rmtree(self.root, ignore_errors=True)
 
     def insert_meeting(self, meeting_id):
         with db_connection.get_connection() as connection:
@@ -218,6 +216,64 @@ class RealtimeAudioChunkTest(unittest.TestCase):
         self.assertIn("hello realtime", meeting.realtime_transcript_text)
         self.assertIn("hello realtime translated", meeting.english_transcript_text)
         self.assertEqual(meeting.translation_provider, "gemini")
+
+
+    def test_uses_recent_three_chunk_window_for_recognition(self):
+        paths = [
+            realtime_transcription_service.CHUNKS_DIR / f"meeting_realtime_chunk_{index}.webm"
+            for index in (7, 8, 9)
+        ]
+        realtime_transcription_service.CHUNKS_DIR.mkdir(parents=True, exist_ok=True)
+        for path in paths:
+            path.write_bytes(b"valid chunk" * 2048)
+        window_path = realtime_transcription_service.CHUNKS_DIR / "meeting_realtime_chunk_9_window.webm"
+        window_path.parent.mkdir(parents=True, exist_ok=True)
+        window_path.write_bytes(b"combined audio")
+        captured = {}
+
+        class FakeSegment:
+            def __init__(self, text):
+                self.text = text
+
+        class FakeWhisperModel:
+            def __init__(self, *_args, **_kwargs):
+                pass
+
+            def transcribe(self, audio_file, **_kwargs):
+                captured["audio_file"] = audio_file
+                return [FakeSegment("rolling window text")], object()
+
+        fake_module = types.SimpleNamespace(WhisperModel=FakeWhisperModel)
+
+        with self.installed_model_patch(), patch.object(
+            realtime_transcription_service,
+            "_combine_audio_window",
+            return_value=(window_path, ""),
+        ) as combine_mock, patch.object(
+            realtime_transcription_service,
+            "_is_audio_decodable",
+            return_value=(True, ""),
+        ), patch.dict(sys.modules, {"faster_whisper": fake_module}), patch.object(
+            realtime_transcription_service,
+            "translate_zh_to_en",
+            return_value={
+                "success": True,
+                "provider": "gemini",
+                "source_text": "rolling window text",
+                "translated_text": "rolling window translated",
+                "latency_ms": 8,
+                "error": None,
+            },
+        ):
+            result = realtime_transcription_service.transcribe_realtime_chunk(
+                "meeting_realtime", 9, paths[-1]
+            )
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["recognition_file"], str(window_path).replace("\\", "/"))
+        self.assertEqual(captured["audio_file"], str(window_path))
+        combined_paths = combine_mock.call_args.args[2]
+        self.assertEqual([path.name for path in combined_paths], [path.name for path in paths])
 
 
 if __name__ == "__main__":

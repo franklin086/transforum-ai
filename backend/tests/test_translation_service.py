@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 
+from api import translation as translation_api
 from services import translation_service
 
 
@@ -108,6 +109,48 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_RATE_LIMIT")
+
+
+    def test_translation_status_reports_gemini_without_exposing_key(self):
+        with patch.object(translation_service, "GEMINI_API_KEY", "secret-key"), patch.object(
+            translation_service,
+            "GEMINI_TRANSLATION_MODEL",
+            "gemini-3.5-flash",
+        ):
+            result = translation_service.get_translation_status()
+
+        self.assertEqual(
+            result,
+            {
+                "gemini_api_key_configured": True,
+                "provider": "gemini",
+                "model": "gemini-3.5-flash",
+            },
+        )
+        self.assertNotIn("secret-key", str(result))
+
+    def test_translation_status_reports_mock_without_key(self):
+        with patch.object(translation_service, "GEMINI_API_KEY", None):
+            result = translation_service.get_translation_status()
+
+        self.assertEqual(
+            result,
+            {
+                "gemini_api_key_configured": False,
+                "provider": "mock",
+                "model": None,
+            },
+        )
+
+
+    def test_translation_status_endpoint_returns_status_payload(self):
+        expected = {
+            "gemini_api_key_configured": True,
+            "provider": "gemini",
+            "model": "gemini-3.5-flash",
+        }
+        with patch.object(translation_api, "get_translation_status", return_value=expected):
+            self.assertEqual(translation_api.translation_status(), expected)
 
 
 if __name__ == "__main__":

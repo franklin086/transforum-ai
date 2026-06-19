@@ -2,6 +2,50 @@
 
 本文件记录 TransForum AI 所有 Codex TASK 的执行历史。
 
+## 2026-06-XX-TASK-013B
+
+任务编号：TASK 013B
+
+时间标签：2026-06-XX-TASK-013B
+
+开发版本：TransForum AI Alpha 1.2.2-hotfix
+
+任务名称：实时音频稳定性 hotfix
+
+修改文件：
+
+- README.md
+- backend/api/translation.py
+- backend/main.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- backend/tests/test_realtime_audio_chunk.py
+- backend/tests/test_translation_service.py
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/api.ts
+- frontend/src/types/meeting.ts
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 将实时 MediaRecorder timeslice 从 3 秒调整为 8 秒。
+- 后端新增最近 3 个 chunk 的 rolling audio window。
+- 合并失败时回退当前有效 chunk，避免会议中断。
+- 无效 chunk 状态提示改为等待有效语音输入，连续 5 次才提示麦克风不稳定。
+- 新增 Gemini translation status API，不泄露 API Key。
+- 更新后端测试覆盖 rolling window 和 translation status。
+
+完成状态：待最终测试和推送。
+
+开发债务检查结果：
+
+- 新增债务：3 项。
+- 已解决债务：0 项。
+- 当前债务总数：30 项。
+
 ## 2026-06-07-TASK-001
 
 任务编号：TASK 001

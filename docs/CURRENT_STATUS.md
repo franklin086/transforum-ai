@@ -4,9 +4,9 @@
 
 项目名称：TransForum AI
 
-当前开发版本号：TransForum AI Alpha 1.2.2
+当前开发版本号：TransForum AI Alpha 1.2.2-hotfix
 
-当前里程碑：Field Test Focus Update
+当前里程碑：Realtime Audio Stability Hotfix
 
 当前项目根目录：
 
@@ -16,52 +16,50 @@ D:\transforum-ai
 
 ## 当前阶段
 
-Alpha 1.2.2 只更新现场测试文档，不修改 backend、frontend、database、websocket、Gemini 或 Whisper 核心代码。
+Alpha 1.2.2-hotfix 修复实时字幕只能识别前 3 秒、后续 chunk 经常 invalid 或 too small 的稳定性问题。
 
-下一次真实会议测试暂不重点评价投屏效果，重点调整为：
+本次允许范围内的修复重点：
 
-1. 实时翻译准确率是否可接受
-2. 实时翻译响应速度是否可接受
-3. 从创建会议到执行会议再到生成会议记录的全流程是否顺畅
-4. 仅依靠笔记本内置麦克风时，中文识别率是否准确
+1. 实时音频 chunk 策略
+2. Whisper 输入音频有效性
+3. Gemini Key 读取与 provider 状态检查
+4. 前端实时状态提示
+5. 文档和技术债务更新
 
 ## 当前已完成能力
 
-- Gemini 真实文本翻译已接入。
-- Gemini 翻译结果已清洗并返回 `provider` 与 `latency_ms`。
-- Whisper 本地模型 readiness 已通过 `/api/transcription/model-status` 检查。
-- 实时中英字幕链路已具备 WebSocket 优先推送和 Polling Fallback。
-- 会议可创建、实时字幕可启动、会议可结束并生成会议纪要。
-- Alpha 1.2.2 现场测试清单、报告模板、问题反馈模板和测试后复盘模板已更新。
+- 前端实时录音 chunk timeslice 已从 3000ms 调整为 8000ms。
+- 后端为每个 meeting 使用最近 3 个有效 chunk 构造 rolling audio window。
+- rolling window 合并失败时回退到当前有效 chunk，不让会议中断。
+- 太小或不可解码 chunk 会被跳过，不会让页面进入 Meeting unavailable。
+- 前端无效 chunk 提示改为 `Waiting for valid speech input...`，连续 5 次后才提示 microphone unstable。
+- Translation 初始状态保持 `Waiting`，没有实际翻译前不显示 Mock Fallback。
+- 新增 `GET /api/translation/status`，返回 Gemini Key 是否配置、provider 和模型名，不返回 API Key 明文。
 
 ## 当前限制
 
-- 笔记本内置麦克风识别效果需真实会议验证。
-- Gemini 翻译延迟需现场测试。
-- Gemini 翻译准确率需真实会议语料验证。
-- 完整会议流程仍需真实会议压力测试。
-- 会议纪要质量需真实会议记录验证。
-- 投屏效果本次只做基础打开检查，不评价大屏显示质量、投影仪适配或远距离可读性。
+- 长期应改为 WAV/PCM 音频输入。
+- 长期应使用更稳定的音频流处理方案。
+- 笔记本内置麦克风识别仍需现场验证。
+- WebM chunk 合并依赖本机 ffmpeg；合并失败时当前策略会回退到单个 8 秒 chunk。
+- 30 秒真实讲话连续识别仍需在浏览器麦克风权限可用时现场验证。
 
 ## 当前最新任务记录
 
-时间标签：2026-06-09-TASK-014A
+时间标签：2026-06-XX-TASK-013B
 
-开发版本号：TransForum AI Alpha 1.2.2
+开发版本号：TransForum AI Alpha 1.2.2-hotfix
 
-任务名称：现场测试重点调整
-
-完成状态：完成
+任务名称：实时音频稳定性 hotfix
 
 完成内容：
 
-- `docs/FIELD_TEST_CHECKLIST.md` 调整为 Alpha 1.2.2 Field Test Focus。
-- `docs/FIELD_TEST_REPORT_TEMPLATE.md` 增加实时翻译、响应速度、完整流程和笔记本内置麦克风评分表。
-- `docs/POST_TEST_REVIEW_TEMPLATE.md` 增加测试结论和下一步最高优先级选择。
-- `docs/ISSUE_FEEDBACK_TEMPLATE.md` 增加现场测试问题分类。
-- `docs/TECHNICAL_DEBT.md` 新增 5 项现场测试债务。
-- README 增加 Alpha 1.2.2 Field Test Focus。
+- 修复 3 秒 WebM chunk 不稳定导致实时字幕停留在第一段的问题。
+- 增加 rolling audio window 和 8 秒 chunk 策略。
+- 增加 Gemini translation status API。
+- 调整前端实时状态提示，避免过早显示 microphone unstable。
+- 更新 README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、TECHNICAL_DEBT。
 
 下一阶段建议：
 
-- 根据真实会议现场测试结果进入 Alpha 1.2.3 或 Alpha 1.3 问题修复。
+- 在真实会议环境中验证 30 秒以上连续讲话识别和 Gemini provider 状态。

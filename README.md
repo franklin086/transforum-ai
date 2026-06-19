@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.2.2
+当前版本：TransForum AI Alpha 1.2.2-hotfix
 
 当前项目根目录：
 
@@ -288,6 +288,20 @@ docs/POST_TEST_REVIEW_TEMPLATE.md
 - Gemini API Key 本机配置成功
 - Gemini 真实文本翻译验收通过
 
+## Alpha 1.2.2-hotfix Realtime Audio Stability
+
+本 hotfix 重点修复实时字幕只能识别前 3 秒的问题。
+
+修复内容：
+
+- 前端实时录音 chunk 从 3 秒调整为 8 秒，减少不可独立解码 WebM chunk。
+- 后端为每个 meeting 保留最近 3 个有效 chunk，并优先使用 rolling audio window 识别。
+- rolling window 合并失败时回退到当前有效 chunk，不中断会议。
+- 连续无效 chunk 时先显示 `Waiting for valid speech input...`，避免过早提示麦克风不稳定。
+- 新增 `GET /api/translation/status`，用于检查 Gemini API Key 是否已配置、当前 provider 和模型名，不返回 Key 明文。
+
+长期方向：后续应改为 WAV/PCM 或更稳定的音频流处理方案。
+
 ## 当前 API
 
 - `GET /api/health`
@@ -298,6 +312,7 @@ docs/POST_TEST_REVIEW_TEMPLATE.md
 - `POST /api/transcription/start`
 - `GET /api/transcription/{meeting_id}`
 - `GET /api/transcription/model-status`
+- `GET /api/translation/status`
 - `POST /api/realtime/transcribe-chunk`
 - `GET /api/realtime/transcript/{meeting_id}`
 - `GET /api/realtime/bilingual/{meeting_id}`，返回 `provider` 和 `latency_ms`
@@ -454,7 +469,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.2.2
+TransForum AI Alpha 1.2.2-hotfix
 ```
 
 版本规则：
@@ -480,6 +495,7 @@ TransForum AI Alpha 1.2.2
 - Alpha 1.2：WebSocket 实时字幕推送与 Polling Fallback
 - Alpha 1.2.1：真实会议现场测试文档准备
 - Alpha 1.2.2：现场测试重点调整为翻译、流程和内置麦克风
+- Alpha 1.2.2-hotfix：实时音频 chunk 稳定性修复
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

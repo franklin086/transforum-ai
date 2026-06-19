@@ -104,3 +104,10 @@ export type MinutesResult = {
   action_items: string[];
   next_steps: string[];
 };
+
+
+export type TranslationStatus = {
+  gemini_api_key_configured: boolean;
+  provider: "gemini" | "mock" | string;
+  model?: string | null;
+};

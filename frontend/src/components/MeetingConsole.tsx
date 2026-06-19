@@ -49,6 +49,7 @@ function formatTranslationProvider(provider?: string | null, english?: string | 
 }
 
 const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL"]);
+const REALTIME_CHUNK_MS = 8000;
 
 export function MeetingConsole() {
   const router = useRouter();
@@ -162,9 +163,9 @@ export function MeetingConsole() {
             invalidChunkCountRef.current += 1;
             setCurrentRealtimeChunk(message.chunk_index);
             setRealtimeStatus(
-              invalidChunkCountRef.current >= 3
+              invalidChunkCountRef.current >= 5
                 ? "Microphone input unstable. Please check microphone permission or try external microphone."
-                : "Skipped invalid audio chunk, waiting for next valid audio."
+                : "Waiting for valid speech input..."
             );
           }
           return;
@@ -238,7 +239,7 @@ export function MeetingConsole() {
   }
 
   function formatRealtimeTimestamp(chunkIndex: number) {
-    const totalSeconds = Math.max(chunkIndex, 1) * 3;
+    const totalSeconds = Math.max(chunkIndex, 1) * (REALTIME_CHUNK_MS / 1000);
     const hours = Math.floor(totalSeconds / 3600)
       .toString()
       .padStart(2, "0");
@@ -275,7 +276,7 @@ export function MeetingConsole() {
       return;
     }
 
-    setRealtimeStatus("Uploading Chunk...");
+    setRealtimeStatus("Recording and Processing...");
     setCurrentRealtimeChunk(chunkIndex);
 
     try {
@@ -288,9 +289,9 @@ export function MeetingConsole() {
         if (SKIPPED_CHUNK_ERRORS.has(result.error)) {
           invalidChunkCountRef.current += 1;
           setRealtimeStatus(
-            invalidChunkCountRef.current >= 3
+            invalidChunkCountRef.current >= 5
               ? "Microphone input unstable. Please check microphone permission or try external microphone."
-              : "Skipped invalid audio chunk, waiting for next valid audio."
+              : "Waiting for valid speech input..."
           );
           return;
         }
@@ -367,7 +368,7 @@ export function MeetingConsole() {
         realtimeStreamRef.current = null;
       };
 
-      recorder.start(3000);
+      recorder.start(REALTIME_CHUNK_MS);
       setIsRealtimeCaptioning(true);
       setRealtimeStatus("Listening...");
       setCurrentRealtimeChunk(0);

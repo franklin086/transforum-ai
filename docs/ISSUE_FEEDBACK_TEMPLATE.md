@@ -1,4 +1,4 @@
-# TransForum AI Issue Feedback Template
+# TransForum AI Alpha 1.2.2 Issue Feedback Template
 
 ## 问题编号
 
@@ -10,7 +10,7 @@ ISSUE-YYYYMMDD-001
 
 ## 问题类型
 
-内置麦克风 / Whisper / Gemini 翻译准确率 / Gemini 翻译延迟 / 完整会议流程 / 会议纪要 / WebSocket / 投屏 / UI / 其他
+内置麦克风 / Whisper 识别准确率 / Gemini 翻译准确率 / Gemini 翻译延迟 / 完整会议流程 / 会议纪要 / WebSocket / 投屏基础打开 / UI / 其他
 
 ## 问题描述
 
@@ -36,4 +36,4 @@ ISSUE-YYYYMMDD-001
 
 ## 建议修复版本
 
-Alpha 1.2.2 / Alpha 1.3 / Beta
+Alpha 1.2.3 / Alpha 1.3 / Beta

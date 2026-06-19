@@ -17,6 +17,7 @@
 - `docs/ISSUE_FEEDBACK_TEMPLATE.md` 增加内置麦克风、Gemini 翻译准确率、Gemini 翻译延迟和完整会议流程分类。
 - README 增加 Alpha 1.2.2 Field Test Focus 说明。
 - TECHNICAL_DEBT 增加现场测试重点相关债务。
+- 现场测试清单和模板统一修正为可读中文，避免现场记录时继续受到乱码内容影响。
 
 验收结果：
 

@@ -276,6 +276,8 @@ docs/POST_TEST_REVIEW_TEMPLATE.md
 
 投屏页本次只做基础打开检查，不评价大屏显示质量、投影仪适配或远距离可读性。
 
+现场记录以 `docs/FIELD_TEST_REPORT_TEMPLATE.md` 为准，复盘结论记录到 `docs/POST_TEST_REVIEW_TEMPLATE.md`。
+
 - 会议纪要页面显示摘要、核心观点、待办事项、下一步计划
 - 重新打开会议可查看历史纪要
 - 首页提供 Start First Real Meeting Demo 一键演示入口

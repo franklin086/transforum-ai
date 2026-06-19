@@ -1201,7 +1201,6 @@ LocalEntryNotFoundError: cannot find the appropriate snapshot folder for the spe
 - README.md
 - docs/CHANGELOG.md
 - docs/CURRENT_STATUS.md
-- docs/DEVELOPMENT_PLAN.md
 - docs/FIELD_TEST_CHECKLIST.md
 - docs/FIELD_TEST_REPORT_TEMPLATE.md
 - docs/ISSUE_FEEDBACK_TEMPLATE.md

@@ -2,6 +2,63 @@
 
 本文件记录 TransForum AI 所有 Codex TASK 的执行历史。
 
+## 2026-06-XX-TASK-013D
+
+任务编号：TASK 013D
+
+时间标签：2026-06-XX-TASK-013D
+
+开发版本：TransForum AI Alpha 1.2.4
+
+任务名称：Realtime Gemini UI and Minutes Display Fix
+
+修改文件：
+
+- README.md
+- backend/api/realtime.py
+- backend/database/connection.py
+- backend/main.py
+- backend/models/meeting.py
+- backend/services/minutes_service.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- backend/tests/test_realtime_audio_chunk.py
+- backend/tests/test_translation_service.py
+- frontend/src/app/meeting/minutes/page.tsx
+- frontend/src/app/screen/page.tsx
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/realtimeSocket.ts
+- frontend/src/types/meeting.ts
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 清除默认 Mock EN 生成路径。
+- 修复 realtime translation provider/status/fallback reason payload。
+- 修复前端 waiting/gemini/mock fallback 三态显示。
+- 修复 Meeting Minutes 页面分区显示。
+
+验收结果：
+
+- 后端 compileall 通过。
+- 后端 unittest 通过，28 个测试 OK。
+- 前端 build 通过。
+- `/api/health` 返回 Alpha 1.2.4。
+- `/api/translation/status` 返回 provider=gemini。
+- 真实 Gemini 调用返回 503 high demand。
+- 浏览器自动化验收被当前环境信任边界阻止。
+
+完成状态：代码修复完成；人工浏览器验收未通过，未 push，未创建 tag。
+
+开发债务检查结果：
+
+- 新增债务：3 项。
+- 已解决债务：默认 Mock EN 文案生成路径。
+- 当前债务总数：36 项。
+
 ## 2026-06-XX-TASK-013C
 
 任务编号：TASK 013C

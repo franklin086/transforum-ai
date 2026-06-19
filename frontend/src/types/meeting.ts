@@ -16,6 +16,8 @@ export type Meeting = {
   realtime_transcript_text?: string | null;
   english_transcript_text?: string | null;
   translation_provider?: string | null;
+  translation_status?: string | null;
+  translation_fallback_reason?: string | null;
   translation_latency_ms?: number | null;
   minutes_summary?: string | null;
   minutes_key_points?: string | null;
@@ -55,14 +57,23 @@ export type RealtimeTranscriptionResult =
   | {
       success: true;
       text: string;
+      caption_text?: string;
+      accepted_caption?: boolean;
+      translation_attempted?: boolean;
+      saved_to_minutes?: boolean;
       english_text?: string;
       translation_text?: string;
       translation_provider?: string;
+      translation_status?: string;
       translation_latency_ms?: number;
+      latency_ms?: number;
       translation_fallback_reason?: string | null;
+      fallback_reason?: string | null;
+      gemini_configured?: boolean;
       translation?: {
         success: boolean;
         provider: string;
+        translation_status?: string;
         source_text?: string;
         translated_text?: string;
         error?: string | null;
@@ -78,6 +89,14 @@ export type RealtimeTranscriptionResult =
       error: string;
       message: string;
       chunk_index?: number;
+      caption_text?: string;
+      accepted_caption?: boolean;
+      translation_attempted?: boolean;
+      translation_provider?: string;
+      translation_status?: string;
+      translation_fallback_reason?: string | null;
+      fallback_reason?: string | null;
+      saved_to_minutes?: boolean;
     };
 
 export type RealtimeTranscriptResult = {
@@ -95,6 +114,10 @@ export type RealtimeBilingualResult = {
   chinese: string;
   english: string;
   provider?: string;
+  translation_provider?: string;
+  translation_status?: string;
+  translation_text?: string;
+  fallback_reason?: string | null;
   latency_ms?: number;
   updated_at: string;
 };

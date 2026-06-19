@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.2.3
+当前版本：TransForum AI Alpha 1.2.4
 
 当前项目根目录：
 
@@ -289,6 +289,26 @@ docs/POST_TEST_REVIEW_TEMPLATE.md
 - Gemini 真实文本翻译验收通过
 
 
+
+## Alpha 1.2.4 Realtime Gemini UI and Minutes Display Fix
+
+Alpha 1.2.3 的人工浏览器验收未完全通过，主要问题为：
+
+- realtime 页面仍出现默认 Mock EN 文案。
+- `/api/translation/status` 显示 Gemini 已配置，但 realtime 页面未显示 `Translation: Gemini`。
+- Meeting Minutes 页面内容来源和分区不清晰。
+
+Alpha 1.2.4 修复重点：
+
+1. 后端不再生成默认 `[Mock EN] Hello everyone, welcome to the meeting.`。
+2. 空文本和 waiting 状态返回 `translation_provider: waiting`、`translation_status: waiting`。
+3. Gemini 成功返回 `translation_provider: gemini`、`translation_status: translated`。
+4. Gemini 失败才返回 `translation_provider: mock`、`translation_status: fallback` 和 `fallback_reason`。
+5. 前端只有在 fallback reason 存在时才显示 `Mock Fallback`。
+6. Meeting Minutes 页面明确显示会议摘要、实时中文字幕、英文翻译、核心观点、待办事项和下一步计划。
+
+当前验收说明：本地后端测试和前端构建已通过；本次环境中的浏览器自动化被信任边界阻止，真实 Gemini 调用返回 503 high demand，因此尚未创建 Alpha 1.2.4 标签。
+
 ## Alpha 1.2.3 Realtime Gemini Translation Fix
 
 Alpha 1.2.3 修复实时字幕滚动窗口带来的旧内容重复写入问题，并确保有效中文实时识别结果会进入 Gemini 翻译链路。
@@ -482,7 +502,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.2.3
+TransForum AI Alpha 1.2.4
 ```
 
 版本规则：

@@ -316,6 +316,9 @@ class RealtimeAudioChunkTest(unittest.TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["text"], "")
         self.assertEqual(result["translation_provider"], "waiting")
+        self.assertEqual(result["translation_status"], "waiting")
+        self.assertEqual(result["translation_text"], "")
+        self.assertIsNone(result["fallback_reason"])
         translate_mock.assert_not_called()
         self.assertIsNone(meeting.realtime_transcript_text)
         self.assertIsNone(meeting.english_transcript_text)
@@ -433,7 +436,12 @@ class RealtimeAudioChunkTest(unittest.TestCase):
             )
 
         translate_mock.assert_called_once_with("new chinese text")
+        self.assertTrue(result["accepted_caption"])
+        self.assertTrue(result["translation_attempted"])
+        self.assertTrue(result["saved_to_minutes"])
         self.assertEqual(result["translation_provider"], "gemini")
+        self.assertNotEqual(result["translation_provider"], "waiting")
+        self.assertEqual(result["translation_status"], "translated")
         self.assertEqual(result["translation_text"], "new English text")
         self.assertEqual(result["translation_latency_ms"], 22)
         self.assertIsNone(result["translation_fallback_reason"])
@@ -452,20 +460,34 @@ class RealtimeAudioChunkTest(unittest.TestCase):
                 "success": False,
                 "provider": "mock",
                 "source_text": "fallback text",
-                "translated_text": "[Mock EN] fallback",
+                "translated_text": "",
                 "latency_ms": 30,
                 "error": "GEMINI_API_ERROR",
                 "fallback_reason": "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR",
+                "translation_status": "fallback",
             },
         ):
             result = realtime_transcription_service.transcribe_realtime_chunk(
                 "meeting_realtime", 16, path
             )
 
+        meeting = meeting_repository.get_meeting("meeting_realtime")
+        self.assertTrue(result["accepted_caption"])
+        self.assertTrue(result["translation_attempted"])
+        self.assertTrue(result["saved_to_minutes"])
+        self.assertEqual(result["caption_text"], "fallback text")
         self.assertEqual(result["translation_provider"], "mock")
-        self.assertEqual(result["translation_text"], "[Mock EN] fallback")
+        self.assertNotEqual(result["translation_provider"], "waiting")
+        self.assertEqual(result["translation_status"], "fallback")
+        self.assertEqual(result["translation_text"], "")
         self.assertEqual(
             result["translation_fallback_reason"],
+            "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR",
+        )
+        self.assertEqual(meeting.translation_provider, "mock")
+        self.assertEqual(meeting.translation_status, "fallback")
+        self.assertEqual(
+            meeting.translation_fallback_reason,
             "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR",
         )
 

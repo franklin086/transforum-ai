@@ -35,14 +35,25 @@ function latestLineWithoutTimestamp(text?: string | null) {
   return latestLine.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "");
 }
 
-function formatTranslationProvider(provider?: string | null, english?: string | null) {
-  if (!english?.trim()) {
-    return "Waiting";
-  }
-  if (provider === "gemini") {
+function isMockPlaceholder(text?: string | null) {
+  return (text ?? "").trim().toLowerCase().startsWith("[" + "mock en" + "]");
+}
+
+function safeTranslationText(text?: string | null) {
+  const trimmed = (text ?? "").trim();
+  return isMockPlaceholder(trimmed) ? "" : trimmed;
+}
+
+function formatTranslationProvider(
+  provider?: string | null,
+  english?: string | null,
+  fallbackReason?: string | null
+) {
+  const safeEnglish = safeTranslationText(english);
+  if (provider === "gemini" && safeEnglish) {
     return "Gemini";
   }
-  if (provider === "mock") {
+  if (provider === "mock" && fallbackReason) {
     return "Mock Fallback";
   }
   return "Waiting";
@@ -50,6 +61,15 @@ function formatTranslationProvider(provider?: string | null, english?: string | 
 
 const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL", "WAITING_FOR_VALID_SPEECH"]);
 const REALTIME_CHUNK_MS = 8000;
+
+type RealtimeDebugState = {
+  accepted_caption: boolean | null;
+  translation_attempted: boolean | null;
+  translation_provider: string;
+  translation_status: string;
+  fallback_reason: string | null;
+  saved_to_minutes: boolean | null;
+};
 
 export function MeetingConsole() {
   const router = useRouter();
@@ -78,6 +98,7 @@ export function MeetingConsole() {
   const [translationProvider, setTranslationProvider] = useState("Waiting");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
   const [translationFallbackReason, setTranslationFallbackReason] = useState<string | null>(null);
+  const [lastRealtimeDebug, setLastRealtimeDebug] = useState<RealtimeDebugState | null>(null);
   const [webSocketStatus, setWebSocketStatus] = useState("Disconnected");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
   const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
@@ -107,15 +128,16 @@ export function MeetingConsole() {
         setTranscriptPreview(result.meeting.transcript_text?.slice(0, 500) ?? "");
         setTranscriptFile(result.meeting.transcript_file ?? null);
         setRealtimeTranscript(result.meeting.realtime_transcript_text ?? "");
-        const latestEnglish = latestLineWithoutTimestamp(
-          result.meeting.english_transcript_text
+        const latestEnglish = safeTranslationText(
+          latestLineWithoutTimestamp(result.meeting.english_transcript_text)
         );
         setCurrentTranslation(latestEnglish);
+        const savedFallbackReason = result.meeting.translation_fallback_reason ?? null;
         setTranslationProvider(
-          formatTranslationProvider(result.meeting.translation_provider, latestEnglish)
+          formatTranslationProvider(result.meeting.translation_provider, latestEnglish, savedFallbackReason)
         );
         setTranslationLatencyMs(result.meeting.translation_latency_ms ?? 0);
-        setTranslationFallbackReason(null);
+        setTranslationFallbackReason(savedFallbackReason);
         setError(null);
       })
       .catch(() => {
@@ -174,12 +196,14 @@ export function MeetingConsole() {
         }
 
         setLatestRealtimeText(message.chinese);
-        setCurrentTranslation(message.english);
+        const englishText = safeTranslationText(message.translation_text ?? message.english);
+        const fallbackReason = message.translation_fallback_reason ?? message.fallback_reason ?? null;
+        setCurrentTranslation(englishText);
         setTranslationProvider(
-          formatTranslationProvider(message.provider, message.english)
+          formatTranslationProvider(message.provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
-        setTranslationFallbackReason(message.translation_fallback_reason ?? null);
+        setTranslationFallbackReason(fallbackReason);
         invalidChunkCountRef.current = 0;
         setRealtimeStatus("Captioning");
       },
@@ -202,12 +226,14 @@ export function MeetingConsole() {
           return;
         }
         setLatestRealtimeText(result.chinese);
-        setCurrentTranslation(result.english);
+        const englishText = safeTranslationText(result.translation_text ?? result.english);
+        const fallbackReason = result.fallback_reason ?? null;
+        setCurrentTranslation(englishText);
         setTranslationProvider(
-          formatTranslationProvider(result.provider, result.english)
+          formatTranslationProvider(result.provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(result.latency_ms ?? 0);
-        setTranslationFallbackReason(null);
+        setTranslationFallbackReason(fallbackReason);
       } catch {
         setWebSocketStatus("Error");
       }
@@ -297,6 +323,14 @@ export function MeetingConsole() {
             setTranslationProvider("Waiting");
           }
           setTranslationFallbackReason(null);
+          setLastRealtimeDebug({
+            accepted_caption: result.accepted_caption ?? false,
+            translation_attempted: result.translation_attempted ?? false,
+            translation_provider: result.translation_provider ?? "waiting",
+            translation_status: result.translation_status ?? "waiting",
+            fallback_reason: result.fallback_reason ?? result.translation_fallback_reason ?? null,
+            saved_to_minutes: result.saved_to_minutes ?? false,
+          });
           return;
         }
 
@@ -308,17 +342,29 @@ export function MeetingConsole() {
       const text = result.text.trim();
       if (text) {
         const line = `${formatRealtimeTimestamp(result.chunk_index)} ${text}`;
-        const englishText =
-          result.translation_text?.trim() || result.english_text?.trim() || "";
+        const englishText = safeTranslationText(
+          result.translation_text || result.english_text || ""
+        );
+        const fallbackReason =
+          result.fallback_reason ??
+          result.translation_fallback_reason ??
+          result.translation?.fallback_reason ??
+          null;
         setLatestRealtimeText(text);
         setCurrentTranslation(englishText);
         setTranslationProvider(
-          formatTranslationProvider(result.translation_provider, englishText)
+          formatTranslationProvider(result.translation_provider, englishText, fallbackReason)
         );
-        setTranslationLatencyMs(result.translation_latency_ms ?? 0);
-        setTranslationFallbackReason(
-          result.translation_fallback_reason ?? result.translation?.fallback_reason ?? null
-        );
+        setTranslationLatencyMs(result.translation_latency_ms ?? result.latency_ms ?? 0);
+        setTranslationFallbackReason(fallbackReason);
+        setLastRealtimeDebug({
+          accepted_caption: result.accepted_caption ?? Boolean(text),
+          translation_attempted: result.translation_attempted ?? Boolean(text),
+          translation_provider: result.translation_provider ?? "waiting",
+          translation_status: result.translation_status ?? "waiting",
+          fallback_reason: fallbackReason,
+          saved_to_minutes: result.saved_to_minutes ?? null,
+        });
         invalidChunkCountRef.current = 0;
         setRealtimeTranscript((current) =>
           current ? `${current}\n${line}` : line
@@ -720,7 +766,7 @@ export function MeetingConsole() {
               Latest Text: {latestRealtimeText || "No realtime text yet."}
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Current Translation: {currentTranslation || "No English subtitle yet."}
+              Current Translation: {currentTranslation || translationFallbackReason || "No English subtitle yet."}
             </p>
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Translation: {translationProvider}
@@ -733,6 +779,17 @@ export function MeetingConsole() {
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Latency: {translationLatencyMs} ms
             </p>
+            {lastRealtimeDebug ? (
+              <div className="mt-4 rounded-md border border-dashed border-slate-300 bg-slate-50 p-3 text-xs text-slate-600">
+                <p className="font-semibold text-slate-700">Realtime Debug</p>
+                <p>accepted_caption: {String(lastRealtimeDebug.accepted_caption)}</p>
+                <p>translation_attempted: {String(lastRealtimeDebug.translation_attempted)}</p>
+                <p>translation_provider: {lastRealtimeDebug.translation_provider}</p>
+                <p>translation_status: {lastRealtimeDebug.translation_status}</p>
+                <p>fallback_reason: {lastRealtimeDebug.fallback_reason || ""}</p>
+                <p>saved_to_minutes: {String(lastRealtimeDebug.saved_to_minutes)}</p>
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-3">
             <button

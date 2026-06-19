@@ -60,7 +60,8 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_API_KEY_MISSING")
-        self.assertTrue(result["translated_text"].startswith("[Mock EN]"))
+        self.assertEqual(result["translated_text"], "")
+        self.assertEqual(result["translation_status"], "fallback")
         self.assertEqual(result["fallback_reason"], "GEMINI_API_KEY_MISSING")
         self.assertEqual(result["latency_ms"], 0)
 
@@ -93,8 +94,9 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_API_ERROR")
+        self.assertEqual(result["translation_status"], "fallback")
         self.assertEqual(result["fallback_reason"], "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR")
-        self.assertTrue(result["translated_text"].startswith("[Mock EN]"))
+        self.assertEqual(result["translated_text"], "")
 
     def test_rate_limit_retries_once_then_fallback(self):
         with patch.object(translation_service, "GEMINI_API_KEY", "test-key"), patch.object(
@@ -119,8 +121,19 @@ class TranslationServiceTest(unittest.TestCase):
 
         self.assertTrue(result["success"])
         self.assertEqual(result["provider"], "waiting")
+        self.assertEqual(result["translation_status"], "waiting")
         self.assertEqual(result["translated_text"], "")
         self.assertIsNone(result["fallback_reason"])
+
+
+    def test_mock_fallback_never_returns_default_english_text(self):
+        with patch.object(translation_service, "GEMINI_API_KEY", None):
+            result = translation_service.translate_zh_to_en("hello")
+
+        self.assertEqual(result["provider"], "mock")
+        self.assertEqual(result["translation_status"], "fallback")
+        self.assertEqual(result["translated_text"], "")
+        self.assertNotIn("Hello everyone", str(result))
 
 
     def test_translation_status_reports_gemini_without_exposing_key(self):
@@ -163,6 +176,85 @@ class TranslationServiceTest(unittest.TestCase):
         }
         with patch.object(translation_api, "get_translation_status", return_value=expected):
             self.assertEqual(translation_api.translation_status(), expected)
+
+
+class MinutesBackfillTest(unittest.TestCase):
+    def setUp(self):
+        from pathlib import Path
+        import shutil
+        from uuid import uuid4
+        from database import connection as db_connection
+        from database.connection import init_db
+
+        self.shutil = shutil
+        self.db_connection = db_connection
+        self.root = Path(__file__).resolve().parents[1] / ".test-tmp" / uuid4().hex
+        self.root.mkdir(parents=True, exist_ok=True)
+        data_dir = self.root / "data"
+        self.data_dir_patch = patch.object(db_connection, "DATA_DIR", data_dir)
+        self.db_path_patch = patch.object(db_connection, "DATABASE_PATH", data_dir / "transforum.db")
+        self.data_dir_patch.start()
+        self.db_path_patch.start()
+        init_db()
+        with db_connection.get_connection() as connection:
+            connection.execute(
+                """
+                INSERT INTO meetings (
+                    id, name, source_language, target_language, status, created_at,
+                    realtime_transcript_text, translation_provider, translation_status,
+                    transcript_status
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "meeting_minutes_backfill",
+                    "Minutes Backfill",
+                    "zh",
+                    "en",
+                    "ended",
+                    "2026-06-09T00:00:00",
+                    "[00:00:08] 大家好，我们现在测试实时中文识别和英文翻译。",
+                    "waiting",
+                    "waiting",
+                    "pending",
+                ),
+            )
+            connection.commit()
+
+    def tearDown(self):
+        self.db_path_patch.stop()
+        self.data_dir_patch.stop()
+        self.shutil.rmtree(self.root, ignore_errors=True)
+
+    def test_generate_minutes_backfills_translation_when_caption_exists(self):
+        from services import meeting_repository, minutes_service
+
+        with patch.object(
+            minutes_service,
+            "translate_zh_to_en",
+            return_value={
+                "success": False,
+                "provider": "mock",
+                "source_text": "大家好，我们现在测试实时中文识别和英文翻译。",
+                "translated_text": "",
+                "latency_ms": 12,
+                "error": "GEMINI_API_ERROR: 503 UNAVAILABLE high demand",
+                "fallback_reason": "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR: 503 UNAVAILABLE high demand",
+                "translation_status": "fallback",
+            },
+        ) as translate_mock:
+            result = minutes_service.generate_minutes("meeting_minutes_backfill")
+
+        self.assertTrue(result["success"])
+        translate_mock.assert_called_once()
+        meeting = meeting_repository.get_meeting("meeting_minutes_backfill")
+        self.assertEqual(meeting.translation_provider, "mock")
+        self.assertEqual(meeting.translation_status, "fallback")
+        self.assertEqual(
+            meeting.translation_fallback_reason,
+            "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR: 503 UNAVAILABLE high demand",
+        )
+        self.assertNotEqual(meeting.translation_provider, "waiting")
 
 
 if __name__ == "__main__":

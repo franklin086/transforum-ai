@@ -4,9 +4,9 @@
 
 项目名称：TransForum AI
 
-当前开发版本号：TransForum AI Alpha 1.2.3
+当前开发版本号：TransForum AI Alpha 1.2.4
 
-当前里程碑：Realtime Gemini Translation Fix
+当前里程碑：Realtime Gemini UI and Minutes Display Fix
 
 当前项目根目录：
 
@@ -16,49 +16,54 @@ D:\transforum-ai
 
 ## 当前阶段
 
-Alpha 1.2.3 修复实时字幕 rolling audio window 识别结果重复写入、空文本误触发翻译状态、实时链路未稳定进入 Gemini 翻译的问题。
+Alpha 1.2.3 的人工浏览器验收未完全通过：realtime 页面仍显示默认 Mock EN 文案，Gemini 未在页面上显示为实时翻译 provider，Meeting Minutes 页面内容来源不清晰。
+
+Alpha 1.2.4 已完成代码修复，但本环境中的浏览器自动化被信任边界阻止，真实 Gemini 调用返回 503 high demand，因此不能视为人工浏览器验收通过，也暂不创建里程碑标签。
 
 ## 当前已完成能力
 
-- 后端继续使用 8 秒 MediaRecorder chunk 和最近 3 个 chunk 的 rolling audio window。
-- 后端按 meeting_id 维护 `last_transcript_text`、`last_emitted_text` 和 `recent_text_hashes`，只输出新增实时字幕。
-- Whisper 返回空文本、纯标点或重复文本时，不写入 transcript，不调用 Gemini，返回 `translation_provider: waiting`。
-- rolling window 返回更长识别文本时，只追加新增后缀，避免旧句子重复显示。
-- 有效中文实时字幕会调用 `translation_service.translate_zh_to_en`。
-- Gemini 成功时返回 `translation_provider: gemini`、`translation_text` 和 `translation_latency_ms`。
-- Gemini 失败或未配置时返回 `translation_provider: mock`，并提供 `translation_fallback_reason`。
-- 前端初始显示 `Translation: Waiting`，只有实际翻译结果为 mock 时才显示 Mock Fallback。
-- 前端无效/空文本状态显示 `Waiting for valid speech input...`，不会进入 Meeting unavailable。
+- 后端 fallback 不再生成默认 Mock EN 英文文案。
+- 空文本、纯等待状态返回 `translation_provider: waiting` 和 `translation_status: waiting`。
+- 有效文本会调用 `translation_service.translate_zh_to_en`。
+- Gemini 成功路径返回 `translation_provider: gemini`、`translation_status: translated`、`translation_text` 和延迟。
+- Gemini 失败路径返回 `translation_provider: mock`、`translation_status: fallback` 和 `fallback_reason`，不再伪造默认英文字幕。
+- WebSocket 和 polling payload 均增加 translation status / fallback reason 调试字段。
+- 前端过滤历史 Mock EN 占位文本，只有 fallback reason 存在时显示 Mock Fallback。
+- Meeting Minutes 页面新增明确分区：会议摘要、实时中文字幕、英文翻译、核心观点、待办事项、下一步计划。
+
+## 当前验收结果
+
+- Mock EN 源码搜索：backend 与 frontend/src 无默认 Mock EN 文案命中。
+- 后端 `python -m compileall .`：通过。
+- 后端 `python -B -m unittest discover -s tests`：通过，28 个测试 OK。
+- 前端 `npm run build`：通过。
+- `/api/health`：返回 Alpha 1.2.4。
+- `/api/translation/status`：返回 provider=gemini，model=gemini-3.5-flash。
+- 真实 Gemini 调用：失败，Gemini 返回 503 UNAVAILABLE high demand；fallback reason 正确返回。
+- 浏览器自动化验收：失败，当前环境提示 browser-client is not trusted。
 
 ## 当前限制
 
-- 长期仍建议将浏览器录音输入升级为 WAV/PCM。
-- 长会议连续稳定性仍需现场测试。
-- 笔记本内置麦克风识别效果仍需真实会议验证。
-- WebM rolling window 仍依赖本机 ffmpeg 合并能力。
+- 需要用户在本机浏览器中重新执行人工验收。
+- Gemini 服务 503 高负载时无法证明页面显示 `Translation: Gemini`。
+- 长会议连续识别和内置麦克风效果仍需现场验证。
 
 ## 当前最新任务记录
 
-时间标签：2026-06-XX-TASK-013C
+时间标签：2026-06-XX-TASK-013D
 
-开发版本号：TransForum AI Alpha 1.2.3
+开发版本号：TransForum AI Alpha 1.2.4
 
-任务名称：实时字幕去重与 Gemini 翻译链路修复
+任务名称：Realtime Gemini UI and Minutes Display Fix
 
 完成内容：
 
-- 修复 rolling window 导致旧实时识别内容重复写入。
-- 修复空文本/重复文本触发翻译状态的问题。
-- 修复实时 transcribe chunk 未明确返回 Gemini provider、翻译文本和 fallback reason 的问题。
-- 修复前端未识别前或空文本时错误显示 Mock Fallback 的问题。
+- 清除默认 Mock EN 文案生成路径。
+- 修复 waiting / gemini / mock fallback 三态返回与前端显示逻辑。
+- 改进 Meeting Minutes 页面分区显示。
 - 更新 README、CURRENT_STATUS、TASK_HISTORY、CHANGELOG、TECHNICAL_DEBT。
-
-验收结果：
-
-- `python -m compileall .` 通过。
-- `python -B -m unittest discover -s tests` 通过，27 个测试通过。
-- 前端 `npm run build` 通过。
 
 下一步建议：
 
-- 现场朗读 45 秒以上，确认至少 3 段有效中文字幕、无重复旧句、Translation Provider 显示 Gemini。
+- 等 Gemini 服务恢复后，在真实浏览器中重新创建会议并朗读 45 秒。
+- 人工确认页面显示真实英文翻译和 `Translation: Gemini` 后，再提交、push 并创建 `alpha-1.2.4` 标签。

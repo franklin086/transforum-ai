@@ -13,6 +13,9 @@ export type SubtitleUpdateMessage = {
   translation_latency_ms: number;
   translation_text?: string;
   translation_fallback_reason?: string | null;
+  fallback_reason?: string | null;
+  translation_status?: string;
+  gemini_configured?: boolean;
   timestamp: string;
 };
 

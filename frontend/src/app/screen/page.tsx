@@ -13,14 +13,25 @@ function extractRecentLines(chinese: string, english: string) {
     .slice(-5);
 }
 
-function formatTranslationProvider(provider?: string | null, english?: string | null) {
-  if (!english?.trim()) {
-    return "Waiting";
-  }
-  if (provider === "gemini") {
+function isMockPlaceholder(text?: string | null) {
+  return (text ?? "").trim().toLowerCase().startsWith("[" + "mock en" + "]");
+}
+
+function safeTranslationText(text?: string | null) {
+  const trimmed = (text ?? "").trim();
+  return isMockPlaceholder(trimmed) ? "" : trimmed;
+}
+
+function formatTranslationProvider(
+  provider?: string | null,
+  english?: string | null,
+  fallbackReason?: string | null
+) {
+  const safeEnglish = safeTranslationText(english);
+  if (provider === "gemini" && safeEnglish) {
     return "Gemini";
   }
-  if (provider === "mock") {
+  if (provider === "mock" && fallbackReason) {
     return "Mock Fallback";
   }
   return "Waiting";
@@ -76,9 +87,11 @@ function ScreenContent() {
         }
 
         setChineseCaption(message.chinese);
-        setEnglishCaption(message.english);
+        const englishText = safeTranslationText(message.translation_text ?? message.english);
+        const fallbackReason = message.translation_fallback_reason ?? message.fallback_reason ?? null;
+        setEnglishCaption(englishText);
         setTranslationProvider(
-          formatTranslationProvider(message.provider, message.english)
+          formatTranslationProvider(message.provider, englishText, fallbackReason)
         );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
         setUpdatedAt(message.timestamp);
@@ -109,11 +122,12 @@ function ScreenContent() {
         if (result.chinese) {
           setChineseCaption(result.chinese);
         }
-        if (result.english) {
-          setEnglishCaption(result.english);
+        const englishText = safeTranslationText(result.translation_text ?? result.english);
+        if (englishText) {
+          setEnglishCaption(englishText);
         }
         setTranslationProvider(
-          formatTranslationProvider(result.provider, result.english)
+          formatTranslationProvider(result.provider, englishText, result.fallback_reason ?? null)
         );
         setTranslationLatencyMs(result.latency_ms ?? 0);
         setUpdatedAt(result.updated_at ?? "");

@@ -18,7 +18,9 @@ class Meeting(BaseModel):
     transcript_text: Optional[str] = None
     realtime_transcript_text: Optional[str] = None
     english_transcript_text: Optional[str] = None
-    translation_provider: str = "mock"
+    translation_provider: str = "waiting"
+    translation_status: str = "waiting"
+    translation_fallback_reason: Optional[str] = None
     translation_latency_ms: int = 0
     minutes_summary: Optional[str] = None
     minutes_key_points: Optional[str] = None

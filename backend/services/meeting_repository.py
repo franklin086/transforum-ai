@@ -22,6 +22,8 @@ def _row_to_meeting(row) -> Meeting:
         realtime_transcript_text=row["realtime_transcript_text"],
         english_transcript_text=row["english_transcript_text"],
         translation_provider=row["translation_provider"],
+        translation_status=row["translation_status"],
+        translation_fallback_reason=row["translation_fallback_reason"],
         translation_latency_ms=row["translation_latency_ms"],
         minutes_summary=row["minutes_summary"],
         minutes_key_points=row["minutes_key_points"],
@@ -61,6 +63,8 @@ def create_meeting(request: MeetingCreateRequest) -> Meeting:
                 realtime_transcript_text,
                 english_transcript_text,
                 translation_provider,
+                translation_status,
+                translation_fallback_reason,
                 translation_latency_ms,
                 minutes_summary,
                 minutes_key_points,
@@ -68,7 +72,7 @@ def create_meeting(request: MeetingCreateRequest) -> Meeting:
                 minutes_next_steps,
                 transcript_status
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 meeting.id,
@@ -86,6 +90,8 @@ def create_meeting(request: MeetingCreateRequest) -> Meeting:
                 meeting.realtime_transcript_text,
                 meeting.english_transcript_text,
                 meeting.translation_provider,
+                meeting.translation_status,
+                meeting.translation_fallback_reason,
                 meeting.translation_latency_ms,
                 meeting.minutes_summary,
                 meeting.minutes_key_points,
@@ -104,7 +110,7 @@ def get_meeting(meeting_id: str) -> Meeting | None:
     with get_connection() as connection:
         row = connection.execute(
             """
-            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, translation_latency_ms, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
+            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, translation_status, translation_fallback_reason, translation_latency_ms, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
             FROM meetings
             WHERE id = ?
             """,
@@ -122,7 +128,7 @@ def list_recent_meetings(limit: int = 50) -> list[Meeting]:
     with get_connection() as connection:
         rows = connection.execute(
             """
-            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, translation_latency_ms, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
+            SELECT id, name, source_language, target_language, status, created_at, started_at, ended_at, audio_file, audio_duration, transcript_file, transcript_text, realtime_transcript_text, english_transcript_text, translation_provider, translation_status, translation_fallback_reason, translation_latency_ms, minutes_summary, minutes_key_points, minutes_action_items, minutes_next_steps, transcript_status
             FROM meetings
             ORDER BY created_at DESC
             LIMIT ?
@@ -213,6 +219,8 @@ def append_english_transcript(
     text: str,
     provider: str = "mock",
     latency_ms: int = 0,
+    status: str | None = None,
+    fallback_reason: str | None = None,
 ) -> Meeting | None:
     init_db()
     current = get_meeting(meeting_id)
@@ -222,16 +230,22 @@ def append_english_transcript(
     existing_text = current.english_transcript_text or ""
     next_text = f"{existing_text}\n{text}".strip() if existing_text else text.strip()
 
+    translation_status = status or (
+        "translated" if provider == "gemini" else "fallback" if provider == "mock" else "waiting"
+    )
+
     with get_connection() as connection:
         connection.execute(
             """
             UPDATE meetings
             SET english_transcript_text = ?,
                 translation_provider = ?,
+                translation_status = ?,
+                translation_fallback_reason = ?,
                 translation_latency_ms = ?
             WHERE id = ?
             """,
-            (next_text, provider, latency_ms, meeting_id),
+            (next_text, provider, translation_status, fallback_reason, latency_ms, meeting_id),
         )
         connection.commit()
 

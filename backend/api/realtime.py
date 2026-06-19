@@ -21,6 +21,24 @@ def _latest_text_from_transcript(transcript: str) -> str:
     return re.sub(r"^\[\d{2}:\d{2}:\d{2}\]\s*", "", lines[-1]).strip()
 
 
+def _is_mock_placeholder(text: str) -> bool:
+    compact = (text or "").strip().lower()
+    return compact.startswith("[" + "mock en" + "]")
+
+
+def _safe_english_from_transcript(transcript: str) -> str:
+    latest = _latest_text_from_transcript(transcript)
+    return "" if _is_mock_placeholder(latest) else latest
+
+
+def _safe_provider(provider: str | None, english: str, fallback_reason: str | None) -> str:
+    if provider == "mock" and fallback_reason:
+        return "mock"
+    if english.strip():
+        return provider or "waiting"
+    return "waiting"
+
+
 @router.post("/transcribe-chunk")
 def transcribe_chunk(
     meeting_id: str = Form(...),
@@ -70,13 +88,23 @@ def get_bilingual_realtime_transcript(meeting_id: str):
         raise HTTPException(status_code=404, detail="Meeting not found")
 
     chinese = _latest_text_from_transcript(meeting.realtime_transcript_text or "")
-    english = _latest_text_from_transcript(meeting.english_transcript_text or "")
+    english = _safe_english_from_transcript(meeting.english_transcript_text or "")
+    provider = _safe_provider(
+        meeting.translation_provider,
+        english,
+        meeting.translation_fallback_reason,
+    )
     return {
         "success": True,
         "meeting_id": meeting_id,
         "chinese": chinese,
         "english": english,
-        "provider": meeting.translation_provider or "mock",
+        "provider": provider,
+        "translation_provider": provider,
+        "translation_status": meeting.translation_status or ("translated" if provider == "gemini" else "fallback" if provider == "mock" else "waiting"),
+        "translation_text": english,
+        "fallback_reason": meeting.translation_fallback_reason,
+        "translation_fallback_reason": meeting.translation_fallback_reason,
         "latency_ms": meeting.translation_latency_ms or 0,
         "updated_at": datetime.utcnow().replace(microsecond=0).isoformat(),
     }

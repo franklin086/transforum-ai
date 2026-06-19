@@ -2,6 +2,43 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2.4
+
+时间标签：2026-06-XX-TASK-013D
+
+里程碑：Realtime Gemini UI and Minutes Display Fix
+
+背景：
+
+- Alpha 1.2.3 人工浏览器验收未完全通过。
+- realtime 页面仍出现默认 Mock EN 文案。
+- Gemini provider 未在 realtime 页面显示为真实翻译。
+- Meeting Minutes 页面内容来源和分区不清晰。
+
+变更：
+
+- 后端不再生成默认 Mock EN 英文文案。
+- realtime transcribe chunk 增加 `translation_status`、`fallback_reason`、`gemini_configured`。
+- waiting 状态不触发 Mock Fallback。
+- Gemini fallback 必须带 fallback reason。
+- 前端过滤历史 Mock EN 占位内容。
+- 前端只有 fallback reason 存在时显示 Mock Fallback。
+- Meeting Minutes 页面明确展示会议摘要、实时中文字幕、英文翻译、核心观点、待办事项和下一步计划。
+- `/api/health` 版本更新为 Alpha 1.2.4。
+
+验收：
+
+- 后端测试通过，28 个测试 OK。
+- 前端 build 通过。
+- 真实 Gemini 调用返回 503 high demand，未能完成 Gemini 成功态浏览器验收。
+- 当前环境浏览器自动化受信任边界阻止，未创建 tag。
+
+技术债务：
+
+- Gemini 高负载时需要现场重试成功态验收。
+- 浏览器人工验收仍需用户本机执行。
+- 长会议连续字幕仍需真实会议测试。
+
 ## TransForum AI Alpha 1.2.3
 
 时间标签：2026-06-XX-TASK-013C

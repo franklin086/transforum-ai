@@ -10,6 +10,7 @@ import subprocess
 from fastapi import UploadFile
 
 from config import (
+    GEMINI_API_KEY,
     WHISPER_COMPUTE_TYPE,
     WHISPER_DEVICE,
     get_whisper_model_dir,
@@ -158,12 +159,40 @@ def _waiting_translation_result() -> dict:
     return {
         "success": True,
         "provider": "waiting",
+        "translation_status": "waiting",
         "source_text": "",
         "translated_text": "",
         "latency_ms": 0,
         "error": None,
         "fallback_reason": None,
+        "gemini_configured": bool(GEMINI_API_KEY),
     }
+
+
+def _print_realtime_trace(
+    meeting_id: str,
+    chunk_index: int,
+    caption_text: str,
+    accepted_caption: bool,
+    translation_attempted: bool,
+    translation_provider: str,
+    translation_status: str,
+    fallback_reason: str | None,
+    saved_to_minutes: bool,
+) -> None:
+    trace = {
+        "meeting_id": meeting_id,
+        "chunk_index": chunk_index,
+        "caption_text": caption_text,
+        "accepted_caption": str(accepted_caption).lower(),
+        "translation_attempted": str(translation_attempted).lower(),
+        "translation_provider": translation_provider,
+        "translation_status": translation_status,
+        "fallback_reason": fallback_reason or "",
+        "saved_to_minutes": str(saved_to_minutes).lower(),
+    }
+    for key, value in trace.items():
+        print(f"[REALTIME_TRACE] {key}={value}", flush=True)
 
 
 def _broadcast_subtitle_update(
@@ -173,6 +202,7 @@ def _broadcast_subtitle_update(
     provider: str,
     latency_ms: int,
     fallback_reason: str | None = None,
+    translation_status: str = "waiting",
 ) -> None:
     message = {
         "type": "subtitle_update",
@@ -181,9 +211,12 @@ def _broadcast_subtitle_update(
         "english": english,
         "provider": provider,
         "translation_provider": provider,
+        "translation_status": translation_status,
         "translation_text": english,
         "translation_latency_ms": latency_ms,
         "translation_fallback_reason": fallback_reason,
+        "fallback_reason": fallback_reason,
+        "gemini_configured": bool(GEMINI_API_KEY),
         "timestamp": datetime.utcnow().replace(microsecond=0).isoformat(),
     }
     try:
@@ -501,28 +534,44 @@ def transcribe_realtime_chunk(
         text = _derive_new_transcript_text(meeting_id, meeting, recognized_text)
         transcript_path = _realtime_transcript_path(meeting_id)
 
+        accepted_caption = bool(text)
+        translation_attempted = False
+        saved_to_minutes = False
         if text:
             timestamp = _format_chunk_timestamp(chunk_index)
             transcript_line = f"{timestamp} {text}"
+            translation_attempted = True
             translation_result = translate_zh_to_en(text)
             english_text = translation_result.get("translated_text", "")
             translation_provider = translation_result.get("provider", "mock")
             translation_latency_ms = int(translation_result.get("latency_ms", 0))
+            translation_status = translation_result.get("translation_status") or (
+                "translated" if translation_provider == "gemini" else "fallback"
+            )
             translation_fallback_reason = translation_result.get("fallback_reason")
             if not translation_fallback_reason and translation_provider == "mock":
                 translation_fallback_reason = translation_result.get("error")
+            if translation_provider == "waiting":
+                translation_provider = "error"
+                translation_status = "error"
+                translation_fallback_reason = (
+                    translation_fallback_reason
+                    or "TRANSLATION_PROVIDER_WAITING_AFTER_ACCEPTED_CAPTION"
+                )
             english_line = f"{timestamp} {english_text}" if english_text else ""
             TRANSCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
             with transcript_path.open("a", encoding="utf-8") as output:
                 output.write(f"{transcript_line}\n")
-            append_realtime_transcript(meeting_id, transcript_line)
-            if english_line:
-                append_english_transcript(
-                    meeting_id,
-                    english_line,
-                    translation_provider,
-                    translation_latency_ms,
-                )
+            saved_caption = append_realtime_transcript(meeting_id, transcript_line) is not None
+            saved_translation = append_english_transcript(
+                meeting_id,
+                english_line,
+                translation_provider,
+                translation_latency_ms,
+                translation_status,
+                translation_fallback_reason,
+            ) is not None
+            saved_to_minutes = saved_caption and saved_translation
             _broadcast_subtitle_update(
                 meeting_id,
                 text,
@@ -530,12 +579,14 @@ def transcribe_realtime_chunk(
                 translation_provider,
                 translation_latency_ms,
                 translation_fallback_reason,
+                translation_status,
             )
         else:
             english_text = ""
             translation_result = _waiting_translation_result()
             translation_provider = "waiting"
             translation_latency_ms = 0
+            translation_status = "waiting"
             translation_fallback_reason = None
             _broadcast_chunk_status(
                 meeting_id,
@@ -544,15 +595,35 @@ def transcribe_realtime_chunk(
                 "Waiting for valid speech input...",
             )
 
+        _print_realtime_trace(
+            meeting_id,
+            chunk_index,
+            text,
+            accepted_caption,
+            translation_attempted,
+            translation_provider,
+            translation_status,
+            translation_fallback_reason,
+            saved_to_minutes,
+        )
+
         return {
             "success": True,
             "text": text,
+            "caption_text": text,
+            "accepted_caption": accepted_caption,
+            "translation_attempted": translation_attempted,
             "recognized_text": recognized_text,
             "english_text": english_text,
             "translation_text": english_text,
             "translation_provider": translation_provider,
+            "translation_status": translation_status,
             "translation_latency_ms": translation_latency_ms,
+            "latency_ms": translation_latency_ms,
             "translation_fallback_reason": translation_fallback_reason,
+            "fallback_reason": translation_fallback_reason,
+            "saved_to_minutes": saved_to_minutes,
+            "gemini_configured": bool(GEMINI_API_KEY),
             "translation": translation_result,
             "chunk_index": chunk_index,
             "chunk_file": str(chunk_path).replace("\\", "/"),

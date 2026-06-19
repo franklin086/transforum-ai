@@ -9,10 +9,7 @@ NETWORK_PATTERNS = ("timeout", "timed out", "connection", "network", "dns")
 
 
 def _mock_translate_zh_to_en(text: str) -> str:
-    normalized = text.strip()
-    if not normalized:
-        return ""
-    return "[Mock EN] Hello everyone, welcome to the meeting."
+    return "" if text.strip() else ""
 
 
 def remove_translation_noise(text: str) -> str:
@@ -86,11 +83,13 @@ def _fallback_result(source_text: str, error_code: str, latency_ms: int = 0) -> 
     return {
         "success": False,
         "provider": "mock",
+        "translation_status": "fallback",
         "source_text": source_text,
         "translated_text": _mock_translate_zh_to_en(source_text),
         "latency_ms": latency_ms,
         "error": error_code,
         "fallback_reason": fallback_reason,
+        "gemini_configured": bool(GEMINI_API_KEY),
     }
 
 
@@ -110,11 +109,13 @@ def translate_zh_to_en(text: str) -> dict:
         return {
             "success": True,
             "provider": "waiting",
+            "translation_status": "waiting",
             "source_text": "",
             "translated_text": "",
             "latency_ms": 0,
             "error": None,
             "fallback_reason": None,
+            "gemini_configured": bool(GEMINI_API_KEY),
         }
 
     if not GEMINI_API_KEY:
@@ -131,11 +132,13 @@ def translate_zh_to_en(text: str) -> dict:
             return {
                 "success": True,
                 "provider": "gemini",
+                "translation_status": "translated",
                 "source_text": normalized,
                 "translated_text": translated,
                 "latency_ms": latency_ms,
                 "error": None,
                 "fallback_reason": None,
+                "gemini_configured": True,
             }
         except Exception as error:
             last_error_code = _classify_gemini_error(error)

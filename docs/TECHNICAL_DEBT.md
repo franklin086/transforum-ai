@@ -1,4 +1,34 @@
-# Technical Debt
+﻿# Technical Debt
+
+## Alpha 1.2.4 TASK 013E Technical Debt Update
+
+Time label: 2026-06-XX-TASK-013E
+
+Version: TransForum AI Alpha 1.2.4
+
+New debt:
+
+- [DEBT-041] The 8-second chunk strategy has inherent 8+ second latency and is not suitable for a true simultaneous interpretation experience.
+- [DEBT-042] Whisper tiny with a laptop built-in microphone is not accurate enough for reliable real meeting captions and needs field validation.
+- [DEBT-043] Future work should evaluate WAV/PCM input, external microphones, Whisper base/small, Gemini Live, or streaming ASR.
+
+## Alpha 1.2.4 Technical Debt Update
+
+时间标签：2026-06-XX-TASK-013D
+
+开发版本号：TransForum AI Alpha 1.2.4
+
+当前债务总数：36
+
+新增债务：
+
+- [DEBT-038] Gemini 服务返回 503 high demand 时无法完成成功态浏览器验收，需要稍后重试。
+- [DEBT-039] 当前 Codex 浏览器自动化受信任边界阻止，人工浏览器验收需用户本机执行。
+- [DEBT-040] Meeting Minutes 当前仍是归档型摘要，长期应接入更高质量的 AI 纪要生成。
+
+已解决债务：
+
+- 默认 Mock EN 文案不再由后端 fallback 自动生成。
 
 ## Alpha 1.2.3 Technical Debt Update
 
@@ -67,7 +97,7 @@
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.2.3
+当前版本：TransForum AI Alpha 1.2.4
 
 当前债务总数：27
 

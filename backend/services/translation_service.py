@@ -80,6 +80,9 @@ def _translate_with_gemini(text: str) -> str:
 
 
 def _fallback_result(source_text: str, error_code: str, latency_ms: int = 0) -> dict:
+    fallback_reason = error_code
+    if error_code != "GEMINI_API_KEY_MISSING":
+        fallback_reason = f"GEMINI_REQUEST_FAILED: {error_code}"
     return {
         "success": False,
         "provider": "mock",
@@ -87,6 +90,7 @@ def _fallback_result(source_text: str, error_code: str, latency_ms: int = 0) -> 
         "translated_text": _mock_translate_zh_to_en(source_text),
         "latency_ms": latency_ms,
         "error": error_code,
+        "fallback_reason": fallback_reason,
     }
 
 
@@ -105,11 +109,12 @@ def translate_zh_to_en(text: str) -> dict:
     if not normalized:
         return {
             "success": True,
-            "provider": "mock" if not GEMINI_API_KEY else "gemini",
+            "provider": "waiting",
             "source_text": "",
             "translated_text": "",
             "latency_ms": 0,
             "error": None,
+            "fallback_reason": None,
         }
 
     if not GEMINI_API_KEY:
@@ -130,6 +135,7 @@ def translate_zh_to_en(text: str) -> dict:
                 "translated_text": translated,
                 "latency_ms": latency_ms,
                 "error": None,
+                "fallback_reason": None,
             }
         except Exception as error:
             last_error_code = _classify_gemini_error(error)

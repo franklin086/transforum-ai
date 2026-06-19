@@ -11,6 +11,8 @@ export type SubtitleUpdateMessage = {
   english: string;
   provider: "gemini" | "mock" | string;
   translation_latency_ms: number;
+  translation_text?: string;
+  translation_fallback_reason?: string | null;
   timestamp: string;
 };
 
@@ -18,7 +20,7 @@ export type ChunkStatusMessage = {
   type: "chunk_status";
   meeting_id: string;
   chunk_index: number;
-  error: "INVALID_AUDIO_CHUNK" | "CHUNK_TOO_SMALL" | string;
+  error: "INVALID_AUDIO_CHUNK" | "CHUNK_TOO_SMALL" | "WAITING_FOR_VALID_SPEECH" | string;
   message: string;
   timestamp: string;
 };

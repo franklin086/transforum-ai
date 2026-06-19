@@ -2,6 +2,52 @@
 
 本文件记录 TransForum AI 所有 Codex TASK 的执行历史。
 
+## 2026-06-XX-TASK-013C
+
+任务编号：TASK 013C
+
+时间标签：2026-06-XX-TASK-013C
+
+开发版本：TransForum AI Alpha 1.2.3
+
+任务名称：实时字幕去重与 Gemini 翻译链路修复
+
+修改文件：
+
+- README.md
+- backend/main.py
+- backend/services/realtime_transcription_service.py
+- backend/services/translation_service.py
+- backend/tests/test_realtime_audio_chunk.py
+- backend/tests/test_translation_service.py
+- frontend/src/components/MeetingConsole.tsx
+- frontend/src/services/realtimeSocket.ts
+- frontend/src/types/meeting.ts
+- docs/CHANGELOG.md
+- docs/CURRENT_STATUS.md
+- docs/TASK_HISTORY.md
+- docs/TECHNICAL_DEBT.md
+
+完成内容：
+
+- 后端按 meeting_id 维护最近识别文本、最近已输出文本和 recent hash，避免重复写入。
+- 空文本、纯标点和重复文本不写入 transcript，不调用 Gemini。
+- rolling window 识别出更长文本时只输出新增后缀。
+- 有效中文实时字幕调用 translation_service，并返回 provider、翻译文本、延迟和 fallback reason。
+- 前端 Translation 初始状态保持 Waiting，Gemini 成功显示 Gemini，Gemini 失败显示 Mock Fallback 和原因。
+
+验收结果：
+
+- 后端 compileall 通过。
+- 后端 unittest 通过，27 个测试通过。
+- 前端 `npm run build` 通过。
+
+开发债务检查结果：
+
+- 新增债务：3 项。
+- 已解决债务：0 项。
+- 当前债务总数：33 项。
+
 ## 2026-06-XX-TASK-013B
 
 任务编号：TASK 013B

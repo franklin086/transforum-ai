@@ -1,6 +1,6 @@
 ﻿# TransForum AI
 
-当前版本：TransForum AI Alpha 1.2.2-hotfix
+当前版本：TransForum AI Alpha 1.2.3
 
 当前项目根目录：
 
@@ -288,6 +288,19 @@ docs/POST_TEST_REVIEW_TEMPLATE.md
 - Gemini API Key 本机配置成功
 - Gemini 真实文本翻译验收通过
 
+
+## Alpha 1.2.3 Realtime Gemini Translation Fix
+
+Alpha 1.2.3 修复实时字幕滚动窗口带来的旧内容重复写入问题，并确保有效中文实时识别结果会进入 Gemini 翻译链路。
+
+本次修复重点：
+
+1. Whisper 返回空文本时不写入 transcript，不触发 Gemini，不显示 Mock Fallback。
+2. 重复识别文本不重复写入实时字幕。
+3. rolling audio window 返回更长文本时，只追加新增后缀。
+4. transcribe-chunk 对有效中文调用 translation_service，并返回 `translation_provider`、`translation_text`、`translation_latency_ms` 和 `translation_fallback_reason`。
+5. 前端 Translation 初始状态保持 `Waiting`；Gemini 成功显示 `Gemini`；Gemini 失败才显示 `Mock Fallback` 和 fallback reason。
+
 ## Alpha 1.2.2-hotfix Realtime Audio Stability
 
 本 hotfix 重点修复实时字幕只能识别前 3 秒的问题。
@@ -469,7 +482,7 @@ TransForum AI 使用阶段性开发版本号。
 当前版本：
 
 ```text
-TransForum AI Alpha 1.2.2-hotfix
+TransForum AI Alpha 1.2.3
 ```
 
 版本规则：
@@ -496,6 +509,7 @@ TransForum AI Alpha 1.2.2-hotfix
 - Alpha 1.2.1：真实会议现场测试文档准备
 - Alpha 1.2.2：现场测试重点调整为翻译、流程和内置麦克风
 - Alpha 1.2.2-hotfix：实时音频 chunk 稳定性修复
+- Alpha 1.2.3：实时字幕去重与 Gemini 翻译链路修复
 
 每完成一个里程碑阶段，必须更新 README.md 和 docs/DEVELOPMENT_PLAN.md 中的当前版本号。
 

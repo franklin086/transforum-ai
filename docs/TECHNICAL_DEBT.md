@@ -1,5 +1,23 @@
 # Technical Debt
 
+## Alpha 1.2.3 Technical Debt Update
+
+时间标签：2026-06-XX-TASK-013C
+
+开发版本号：TransForum AI Alpha 1.2.3
+
+当前债务总数：33
+
+新增债务：
+
+- [DEBT-035] 长期仍建议改为 WAV/PCM 音频输入，避免 WebM chunk 与 rolling window 对 ffmpeg 合并能力的依赖。
+- [DEBT-036] 长会议实时识别稳定性仍需现场测试，尤其是 45 秒以上连续发言和多人轮流发言。
+- [DEBT-037] 笔记本内置麦克风识别仍需真实会议验证，需记录距离、噪音和连续讲话条件下的准确率。
+
+已解决债务：
+
+- 无。
+
 ## Alpha 1.2.2-hotfix Technical Debt Update
 
 时间标签：2026-06-XX-TASK-013B
@@ -49,7 +67,7 @@
 
 规则生效版本：TransForum AI Alpha 0.8
 
-当前版本：TransForum AI Alpha 1.2.2
+当前版本：TransForum AI Alpha 1.2.3
 
 当前债务总数：27
 

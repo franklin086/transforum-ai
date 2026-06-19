@@ -26,7 +26,7 @@ function formatTranslationProvider(provider?: string | null, english?: string | 
   return "Waiting";
 }
 
-const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL"]);
+const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL", "WAITING_FOR_VALID_SPEECH"]);
 
 function ScreenContent() {
   const searchParams = useSearchParams();

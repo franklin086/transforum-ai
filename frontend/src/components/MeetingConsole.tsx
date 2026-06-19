@@ -48,7 +48,7 @@ function formatTranslationProvider(provider?: string | null, english?: string | 
   return "Waiting";
 }
 
-const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL"]);
+const SKIPPED_CHUNK_ERRORS = new Set(["INVALID_AUDIO_CHUNK", "CHUNK_TOO_SMALL", "WAITING_FOR_VALID_SPEECH"]);
 const REALTIME_CHUNK_MS = 8000;
 
 export function MeetingConsole() {
@@ -77,6 +77,7 @@ export function MeetingConsole() {
   const [currentTranslation, setCurrentTranslation] = useState("");
   const [translationProvider, setTranslationProvider] = useState("Waiting");
   const [translationLatencyMs, setTranslationLatencyMs] = useState(0);
+  const [translationFallbackReason, setTranslationFallbackReason] = useState<string | null>(null);
   const [webSocketStatus, setWebSocketStatus] = useState("Disconnected");
   const [realtimeTranscript, setRealtimeTranscript] = useState("");
   const [isRealtimeCaptioning, setIsRealtimeCaptioning] = useState(false);
@@ -114,6 +115,7 @@ export function MeetingConsole() {
           formatTranslationProvider(result.meeting.translation_provider, latestEnglish)
         );
         setTranslationLatencyMs(result.meeting.translation_latency_ms ?? 0);
+        setTranslationFallbackReason(null);
         setError(null);
       })
       .catch(() => {
@@ -162,11 +164,11 @@ export function MeetingConsole() {
           if (SKIPPED_CHUNK_ERRORS.has(message.error)) {
             invalidChunkCountRef.current += 1;
             setCurrentRealtimeChunk(message.chunk_index);
-            setRealtimeStatus(
-              invalidChunkCountRef.current >= 5
-                ? "Microphone input unstable. Please check microphone permission or try external microphone."
-                : "Waiting for valid speech input..."
+            setRealtimeStatus("Waiting for valid speech input...");
+            setTranslationProvider((current) =>
+              current === "Mock Fallback" ? "Waiting" : current
             );
+            setTranslationFallbackReason(null);
           }
           return;
         }
@@ -177,6 +179,7 @@ export function MeetingConsole() {
           formatTranslationProvider(message.provider, message.english)
         );
         setTranslationLatencyMs(message.translation_latency_ms ?? 0);
+        setTranslationFallbackReason(message.translation_fallback_reason ?? null);
         invalidChunkCountRef.current = 0;
         setRealtimeStatus("Captioning");
       },
@@ -204,6 +207,7 @@ export function MeetingConsole() {
           formatTranslationProvider(result.provider, result.english)
         );
         setTranslationLatencyMs(result.latency_ms ?? 0);
+        setTranslationFallbackReason(null);
       } catch {
         setWebSocketStatus("Error");
       }
@@ -288,11 +292,11 @@ export function MeetingConsole() {
       if (!result.success) {
         if (SKIPPED_CHUNK_ERRORS.has(result.error)) {
           invalidChunkCountRef.current += 1;
-          setRealtimeStatus(
-            invalidChunkCountRef.current >= 5
-              ? "Microphone input unstable. Please check microphone permission or try external microphone."
-              : "Waiting for valid speech input..."
-          );
+          setRealtimeStatus("Waiting for valid speech input...");
+          if (!currentTranslation) {
+            setTranslationProvider("Waiting");
+          }
+          setTranslationFallbackReason(null);
           return;
         }
 
@@ -304,16 +308,28 @@ export function MeetingConsole() {
       const text = result.text.trim();
       if (text) {
         const line = `${formatRealtimeTimestamp(result.chunk_index)} ${text}`;
+        const englishText =
+          result.translation_text?.trim() || result.english_text?.trim() || "";
         setLatestRealtimeText(text);
-        setCurrentTranslation(result.english_text?.trim() ?? "");
+        setCurrentTranslation(englishText);
         setTranslationProvider(
-          formatTranslationProvider(result.translation_provider, result.english_text)
+          formatTranslationProvider(result.translation_provider, englishText)
         );
         setTranslationLatencyMs(result.translation_latency_ms ?? 0);
+        setTranslationFallbackReason(
+          result.translation_fallback_reason ?? result.translation?.fallback_reason ?? null
+        );
         invalidChunkCountRef.current = 0;
         setRealtimeTranscript((current) =>
           current ? `${current}\n${line}` : line
         );
+      } else {
+        setRealtimeStatus("Waiting for valid speech input...");
+        if (!currentTranslation) {
+          setTranslationProvider("Waiting");
+        }
+        setTranslationFallbackReason(null);
+        return;
       }
       setRealtimeStatus(realtimeActiveRef.current ? "Listening..." : "Stopped");
     } catch {
@@ -375,6 +391,7 @@ export function MeetingConsole() {
       setLatestRealtimeText("");
       setCurrentTranslation("");
       setTranslationProvider("Waiting");
+      setTranslationFallbackReason(null);
     } catch {
       setRealtimeStatus("Microphone Permission Denied");
       setError("Could not access microphone for realtime captions.");
@@ -708,6 +725,11 @@ export function MeetingConsole() {
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Translation: {translationProvider}
             </p>
+            {translationProvider === "Mock Fallback" && translationFallbackReason ? (
+              <p className="mt-2 text-sm text-amber-700">
+                Mock Fallback Reason: {translationFallbackReason}
+              </p>
+            ) : null}
             <p className="mt-2 text-sm font-semibold text-slate-700">
               Latency: {translationLatencyMs} ms
             </p>

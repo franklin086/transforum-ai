@@ -56,14 +56,17 @@ export type RealtimeTranscriptionResult =
       success: true;
       text: string;
       english_text?: string;
+      translation_text?: string;
       translation_provider?: string;
       translation_latency_ms?: number;
+      translation_fallback_reason?: string | null;
       translation?: {
         success: boolean;
         provider: string;
         source_text?: string;
         translated_text?: string;
-        error?: string;
+        error?: string | null;
+        fallback_reason?: string | null;
         latency_ms?: number;
       };
       chunk_index: number;

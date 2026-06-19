@@ -61,6 +61,7 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_API_KEY_MISSING")
         self.assertTrue(result["translated_text"].startswith("[Mock EN]"))
+        self.assertEqual(result["fallback_reason"], "GEMINI_API_KEY_MISSING")
         self.assertEqual(result["latency_ms"], 0)
 
     def test_removes_translation_prefix(self):
@@ -92,6 +93,7 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_API_ERROR")
+        self.assertEqual(result["fallback_reason"], "GEMINI_REQUEST_FAILED: GEMINI_API_ERROR")
         self.assertTrue(result["translated_text"].startswith("[Mock EN]"))
 
     def test_rate_limit_retries_once_then_fallback(self):
@@ -109,6 +111,16 @@ class TranslationServiceTest(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["provider"], "mock")
         self.assertEqual(result["error"], "GEMINI_RATE_LIMIT")
+        self.assertEqual(result["fallback_reason"], "GEMINI_REQUEST_FAILED: GEMINI_RATE_LIMIT")
+
+
+    def test_empty_text_returns_waiting_without_mock_fallback(self):
+        result = translation_service.translate_zh_to_en("   ")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["provider"], "waiting")
+        self.assertEqual(result["translated_text"], "")
+        self.assertIsNone(result["fallback_reason"])
 
 
     def test_translation_status_reports_gemini_without_exposing_key(self):

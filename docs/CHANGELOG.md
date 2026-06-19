@@ -2,6 +2,29 @@
 
 本文件记录 TransForum AI 的阶段性版本变更。
 
+## TransForum AI Alpha 1.2.3
+
+时间标签：2026-06-XX-TASK-013C
+
+里程碑：Realtime Gemini Translation Fix
+
+变更：
+
+- 修复 rolling audio window 返回旧内容导致实时字幕重复写入的问题。
+- Whisper 返回空文本、纯标点或重复文本时不写入 transcript，不触发 Gemini。
+- rolling window 返回更长文本时只追加新增后缀。
+- 实时 transcribe chunk 对有效中文调用 Gemini 翻译服务。
+- 实时翻译 payload 增加 `translation_provider`、`translation_text`、`translation_latency_ms`、`translation_fallback_reason`。
+- Gemini 失败时前端显示 Mock Fallback 及明确 fallback reason。
+- Translation 初始状态和空文本状态保持 Waiting，不再默认显示 `[Mock EN] Hello everyone, welcome to the meeting.`。
+- `/api/health` 版本更新为 Alpha 1.2.3。
+
+技术债务：
+
+- 长期仍建议改为 WAV/PCM 音频输入。
+- 长会议实时识别稳定性仍需现场测试。
+- 笔记本内置麦克风识别仍需真实会议验证。
+
 ## TransForum AI Alpha 1.2.2-hotfix
 
 时间标签：2026-06-XX-TASK-013B
